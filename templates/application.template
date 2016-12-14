@@ -174,8 +174,12 @@
         ELB: "027434742980"
       us-west-2:
         ELB: "797873946194"
+      ca-central-1:
+        ELB: "985666609251"
       eu-west-1:
         ELB: "156460612806"
+      eu-west-2:
+        ELB: "652711504416"
       ap-south-1:
         ELB: "718504428378"
       ap-southeast-2:
