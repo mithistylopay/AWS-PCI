@@ -174,7 +174,7 @@
         NatGateway: "true"
         Glacier: "true"
       us-west-1:
-        ConfigRules: "false"
+        ConfigRules: "true"
         NatGateway: "false"
         Glacier: "false"
       us-west-2:
