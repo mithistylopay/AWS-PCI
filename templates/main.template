@@ -194,7 +194,7 @@
         NatGateway: "true"
         Glacier: "true"
       ap-northeast-2:
-        ConfigRules: "false"
+        ConfigRules: "true"
         NatGateway: "true"
         Glacier: "false"
       ap-south-1:
