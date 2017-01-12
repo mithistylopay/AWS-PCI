@@ -222,65 +222,65 @@ Mappings:
       Glacier: false
   AWSAMIRegionMap:
     AMI:
-      AmazonAmi: amzn-ami-hvm-2016.09.1.20161221-x86_64-gp2
+      AMZNLINUXHVM: amzn-ami-hvm-2016.09.1.20161221-x86_64-gp2
     us-east-1:
-      AmazonAmi: ami-9be6f38c
+      AMZNLINUXHVM: ami-9be6f38c
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-east-2:
-      AmazonAmi: ami-38cd975d
+      AMZNLINUXHVM: ami-38cd975d
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-west-1:
-      AmazonAmi: ami-b73d6cd7
+      AMZNLINUXHVM: ami-b73d6cd7
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-west-2:
-      AmazonAmi: ami-1e299d7e
+      AMZNLINUXHVM: ami-1e299d7e
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ca-central-1:
-      AmazonAmi: ami-eb20928f
+      AMZNLINUXHVM: ami-eb20928f
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     eu-central-1:
-      AmazonAmi: ami-211ada4e
+      AMZNLINUXHVM: ami-211ada4e
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     eu-west-1:
-      AmazonAmi: ami-c51e3eb6
+      AMZNLINUXHVM: ami-c51e3eb6
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     eu-west-2:
-      AmazonAmi: ami-bfe0eadb
+      AMZNLINUXHVM: ami-bfe0eadb
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-south-1:
-      AmazonAmi: ami-9fc7b0f0
+      AMZNLINUXHVM: ami-9fc7b0f0
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-southeast-1:
-      AmazonAmi: ami-4dd6782e
+      AMZNLINUXHVM: ami-4dd6782e
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-southeast-2:
-      AmazonAmi: ami-28cff44b
+      AMZNLINUXHVM: ami-28cff44b
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-northeast-1:
-      AmazonAmi: ami-9f0c67f8
+      AMZNLINUXHVM: ami-9f0c67f8
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-northeast-2:
-      AmazonAmi: ami-94bb6dfa
+      AMZNLINUXHVM: ami-94bb6dfa
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-gov-west-1:
-      AmazonAmi: ami-ffa61d9e
+      AMZNLINUXHVM: ami-ffa61d9e
       InstanceType: m4.large
       InstanceTypeDatabase: db.m3.large
     sa-east-1:
-      AmazonAmi: ami-bb40d8d7
+      AMZNLINUXHVM: ami-bb40d8d7
       InstanceType: m4.large
       InstanceTypeDatabase: db.m3.large
 Conditions:
@@ -327,7 +327,7 @@ Resources:
         pEnvironment: !FindInMap [ CustomVariables, vResourceEnvironmentTagValue, Value ]
         pEC2KeyPair: !Ref pEC2KeyPair
         pSupportsNatGateway: !FindInMap [ RegionServiceSupport, !Ref 'AWS::Region', NatGateway ]
-        pNatAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AmazonAmi ]
+        pNatAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
         pNatInstanceType: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', InstanceType ]
         QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ]
         QSS3BucketName: !Ref QSS3BucketName
@@ -355,13 +355,13 @@ Resources:
         pEC2KeyPairBastion: !Ref pEC2KeyPairBastion
         pEC2KeyPair: !Ref pEC2KeyPair
         pVPCTenancy: !Ref pVPCTenancy
-        pBastionAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AmazonAmi ]
+        pBastionAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
         pRegionAZ1Name: !Ref pAvailabilityZoneA
         pRegionAZ2Name: !Ref pAvailabilityZoneB
         pEnvironment: !FindInMap [ CustomVariables, vResourceEnvironmentTagValue, Value ]
         pBastionInstanceType: !If [ LaunchAsDedicatedInstance, m4.large, t2.small ]
         pSupportsNatGateway: !FindInMap [ RegionServiceSupport, !Ref 'AWS::Region', NatGateway ]
-        pNatAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AmazonAmi ]
+        pNatAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
         pNatInstanceType: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', InstanceType ]
         QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ]
         QSS3BucketName: !Ref QSS3BucketName
@@ -405,8 +405,8 @@ Resources:
         pManagementCIDR: 10.10.0.0/16
         pRegionAZ1Name: !Ref pAvailabilityZoneA
         pRegionAZ2Name: !Ref pAvailabilityZoneB
-        pWebServerAMI: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AmazonAmi ]
-        pAppAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AmazonAmi ]
+        pWebServerAMI: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
+        pAppAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
         pDBUser: testuserdb
         pDBName: testDB
         pDBPassword: !Ref pDBPassword
