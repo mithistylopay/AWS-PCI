@@ -1,24 +1,26 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: Enterprise Accelerator - Provides nesting for required stacks to deploy a full sample web application with reverse proxy, ELBs, IAM, and other resources (for demonstration/POC/testing)
+Description: Enterprise Accelerator - Provides nesting for required stacks to deploy
+  a full sample web application with reverse proxy, ELBs, IAM, and other resources
+  (for demonstration/POC/testing)
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      - Label:
-          default: 'Please provide the following parameter values:'
-        Parameters:
-          - pDBPassword
-          - pNotifyEmail
-          - pEC2KeyPairBastion
-          - pEC2KeyPair
-          - pSupportsConfig
-          - pAvailabilityZoneA
-          - pAvailabilityZoneB
-      - Label:
-          default: AWS Quick Start Configuration
-        Parameters:
-          - QSS3BucketName
-          - QSS3KeyPrefix
+    - Label:
+        default: 'Please provide the following parameter values:'
+      Parameters:
+      - pDBPassword
+      - pNotifyEmail
+      - pEC2KeyPairBastion
+      - pEC2KeyPair
+      - pSupportsConfig
+      - pAvailabilityZoneA
+      - pAvailabilityZoneB
+    - Label:
+        default: AWS Quick Start Configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3KeyPrefix
     ParameterLabels:
       pDBPassword:
         default: Database Password
@@ -50,31 +52,37 @@ Metadata:
     Description: Input of all required parameters in nested stacks
   Output:
     Description: N/A
-
 Parameters:
   pDBPassword:
-    Description: Mixed alphanumeric and must be between 8 and 28 characters and contain at least one capital letter
+    Description: Mixed alphanumeric and must be between 8 and 28 characters and contain
+      at least one capital letter
     NoEcho: true
     Type: String
     MinLength: 8
     MaxLength: 28
     AllowedPattern: '[a-zA-Z0-9!^*\-_+]*'
-    ConstraintDescription: 'Can only contain alphanumeric characters or the following special characters !^*-_+, between 8 and 28 characters'
+    ConstraintDescription: Can only contain alphanumeric characters or the following
+      special characters !^*-_+, between 8 and 28 characters
   pNotifyEmail:
-    Description: Notification email address for security events (you will receive a confirmation email)
+    Description: Notification email address for security events (you will receive
+      a confirmation email)
     Type: String
     Default: distlist@example.org
   pEC2KeyPairBastion:
     Description: The SSH key pair in your account to use for the bastion host login
     Type: AWS::EC2::KeyPair::KeyName
   pEC2KeyPair:
-    Description: The SSH key pair in your account to use for all other EC2 instance logins
+    Description: The SSH key pair in your account to use for all other EC2 instance
+      logins
     Type: AWS::EC2::KeyPair::KeyName
   pSupportsConfig:
-    Description: "Is AWS Config Rules already configured for this region? Use 'No' if you are uncertain. AWS Config Rules is available in these regions: US East (Virginia), US West (Oregon), EU West (Ireland), and EU Central (Frankfurt). See AWS Config Management Console or Deployment Guide for details."
+    Description: 'Is AWS Config Rules already configured for this region? Use ''No''
+      if you are uncertain. AWS Config Rules is available in these regions: US East
+      (Virginia), US West (Oregon), EU West (Ireland), and EU Central (Frankfurt).
+      See AWS Config Management Console or Deployment Guide for details.'
     AllowedValues:
-      - 'Yes'
-      - 'No'
+    - 'Yes'
+    - 'No'
     Default: 'No'
     Type: String
   pAvailabilityZoneA:
@@ -88,19 +96,28 @@ Parameters:
     Type: String
     Default: default
     AllowedValues:
-      - default
-      - dedicated
+    - default
+    - dedicated
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
-    ConstraintDescription: Quick Start bucket name can include numbers, lowercase letters, uppercase letters, periods (.), and hyphens (-). It cannot start or end with a hyphen (-).
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, periods (.), and hyphens (-). It cannot start or
+      end with a hyphen (-).
     Default: quickstart-reference
-    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-]+(/[0-9a-zA-Z-]+)*$
-    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/). It cannot start or end with forward slash (/) because they are automatically appended.
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/). It cannot start or end
+      with forward slash (/) because they are automatically appended.
     Default: enterprise-accelerator/pci/latest
-    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/). It cannot start or end with forward slash (/) because they are automatically appended.
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/). It cannot start or end with forward slash (/) because they
+      are automatically appended.
     Type: String
 Mappings:
   AWSInfoRegionMap:
@@ -149,7 +166,6 @@ Mappings:
     us-west-2:
       Partition: aws
       QuickStartS3URL: https://s3.amazonaws.com
-
   CustomVariables:
     vResourceEnvironmentTagKey:
       Value: Environment
@@ -171,10 +187,6 @@ Mappings:
     us-west-2:
       ConfigRules: false
       NatGateway: true
-      Glacier: true
-    ca-central-1:
-      NatGateway: true
-      ConfigRules: true
       Glacier: true
     ca-central-1:
       ConfigRules: false
@@ -222,94 +234,119 @@ Mappings:
       Glacier: false
   AWSAMIRegionMap:
     AMI:
-      AMZNLINUXHVM: amzn-ami-hvm-2016.09.1.20161221-x86_64-gp2
-    us-east-1:
-      AMZNLINUXHVM: ami-9be6f38c
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    us-east-2:
-      AMZNLINUXHVM: ami-38cd975d
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    us-west-1:
-      AMZNLINUXHVM: ami-b73d6cd7
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    us-west-2:
-      AMZNLINUXHVM: ami-1e299d7e
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ca-central-1:
-      AMZNLINUXHVM: ami-eb20928f
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    eu-central-1:
-      AMZNLINUXHVM: ami-211ada4e
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    eu-west-1:
-      AMZNLINUXHVM: ami-c51e3eb6
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    eu-west-2:
-      AMZNLINUXHVM: ami-bfe0eadb
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ap-south-1:
-      AMZNLINUXHVM: ami-9fc7b0f0
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ap-southeast-1:
-      AMZNLINUXHVM: ami-4dd6782e
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ap-southeast-2:
-      AMZNLINUXHVM: ami-28cff44b
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
+      AMZNLINUXHVM: amzn-ami-hvm-2016.03.3.x86_64-gp2
     ap-northeast-1:
-      AMZNLINUXHVM: ami-9f0c67f8
+      AMZNLINUXHVM: ami-374db956
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-northeast-2:
-      AMZNLINUXHVM: ami-94bb6dfa
+      AMZNLINUXHVM: ami-2b408b45
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ap-south-1:
+      AMZNLINUXHVM: ami-ffbdd790
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ap-southeast-1:
+      AMZNLINUXHVM: ami-a59b49c6
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ap-southeast-2:
+      AMZNLINUXHVM: ami-dc361ebf
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ca-central-1:
+      AMZNLINUXHVM: ami-730ebd17
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    eu-central-1:
+      AMZNLINUXHVM: ami-ea26ce85
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    eu-west-1:
+      AMZNLINUXHVM: ami-f9dd458a
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    eu-west-2:
+      AMZNLINUXHVM: ami-886369ec
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    sa-east-1:
+      AMZNLINUXHVM: ami-6dd04501
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m3.large
+    us-east-1:
+      AMZNLINUXHVM: ami-6869aa05
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    us-east-2:
+      AMZNLINUXHVM: ami-f6035893
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-gov-west-1:
       AMZNLINUXHVM: ami-ffa61d9e
       InstanceType: m4.large
       InstanceTypeDatabase: db.m3.large
-    sa-east-1:
-      AMZNLINUXHVM: ami-bb40d8d7
+    us-west-1:
+      AMZNLINUXHVM: ami-31490d51
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m3.large
+      InstanceTypeDatabase: db.m4.large
+    us-west-2:
+      AMZNLINUXHVM: ami-7172b611
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
 Conditions:
-  LoadConfigRulesTemplate: !Equals [ !Ref 'pSupportsConfig', 'Yes' ]
-  LaunchAsDedicatedInstance: !Equals [ !Ref 'pVPCTenancy', 'dedicated' ]
+  LoadConfigRulesTemplate:
+    !Equals
+    - !Ref pSupportsConfig
+    - 'Yes'
+  LaunchAsDedicatedInstance:
+    !Equals
+    - !Ref pVPCTenancy
+    - dedicated
 Resources:
   IamTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub
+      TemplateURL:
+        !Sub
         - ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/submodules/quickstart-compliance-common/templates/iam.template
-        - { QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ] }
+        - QuickStartS3URL:
+            !FindInMap
+            - AWSInfoRegionMap
+            - !Ref AWS::Region
+            - QuickStartS3URL
       TimeoutInMinutes: 20
   LoggingTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub
+      TemplateURL:
+        !Sub
         - ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/submodules/quickstart-compliance-common/templates/logging.template
-        - { QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ] }
+        - QuickStartS3URL:
+            !FindInMap
+            - AWSInfoRegionMap
+            - !Ref AWS::Region
+            - QuickStartS3URL
       TimeoutInMinutes: 20
       Parameters:
         pNotifyEmail: !Ref pNotifyEmail
-        pSupportsGlacier: !FindInMap [ RegionServiceSupport, !Ref 'AWS::Region', Glacier]
+        pSupportsGlacier:
+          !FindInMap
+          - RegionServiceSupport
+          - !Ref AWS::Region
+          - Glacier
   ProductionVpcTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub
+      TemplateURL:
+        !Sub
         - ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/submodules/quickstart-compliance-common/templates/vpc-production.template
-        - { QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ] }
+        - QuickStartS3URL:
+            !FindInMap
+            - AWSInfoRegionMap
+            - !Ref AWS::Region
+            - QuickStartS3URL
       TimeoutInMinutes: 20
       Parameters:
         pRegionAZ1Name: !Ref pAvailabilityZoneA
@@ -324,26 +361,60 @@ Resources:
         pDBPrivateSubnetACIDR: 10.100.194.0/21
         pDBPrivateSubnetBCIDR: 10.100.212.0/21
         pVPCTenancy: !Ref pVPCTenancy
-        pEnvironment: !FindInMap [ CustomVariables, vResourceEnvironmentTagValue, Value ]
+        pEnvironment:
+          !FindInMap
+          - CustomVariables
+          - vResourceEnvironmentTagValue
+          - Value
         pEC2KeyPair: !Ref pEC2KeyPair
-        pSupportsNatGateway: !FindInMap [ RegionServiceSupport, !Ref 'AWS::Region', NatGateway ]
-        pNatAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
-        pNatInstanceType: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', InstanceType ]
-        QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ]
+        pSupportsNatGateway:
+          !FindInMap
+          - RegionServiceSupport
+          - !Ref AWS::Region
+          - NatGateway
+        pNatAmi:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - AMZNLINUXHVM
+        pNatInstanceType:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - InstanceType
+        QuickStartS3URL:
+          !FindInMap
+          - AWSInfoRegionMap
+          - !Ref AWS::Region
+          - QuickStartS3URL
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
   ManagementVpcTemplate:
-    Type: "AWS::CloudFormation::Stack"
-    DependsOn: "ProductionVpcTemplate"
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ProductionVpcTemplate
     Properties:
-      TemplateURL: !Sub
+      TemplateURL:
+        !Sub
         - ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/submodules/quickstart-compliance-common/templates/vpc-management.template
-        - { QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ] }
+        - QuickStartS3URL:
+            !FindInMap
+            - AWSInfoRegionMap
+            - !Ref AWS::Region
+            - QuickStartS3URL
       TimeoutInMinutes: 20
       Parameters:
-        pProductionVPC: !GetAtt [ ProductionVpcTemplate, Outputs.rVPCProduction ]
-        pRouteTableProdPrivate: !GetAtt [ ProductionVpcTemplate,Outputs.rRouteTableProdPrivate ]
-        pRouteTableProdPublic: !GetAtt [ ProductionVpcTemplate,Outputs.rRouteTableProdPublic ]
+        pProductionVPC:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rVPCProduction
+        pRouteTableProdPrivate:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rRouteTableProdPrivate
+        pRouteTableProdPublic:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rRouteTableProdPublic
         pProductionCIDR: 10.100.0.0/16
         pBastionSSHCIDR: 0.0.0.0/0
         pManagementCIDR: 10.10.0.0/16
@@ -355,67 +426,165 @@ Resources:
         pEC2KeyPairBastion: !Ref pEC2KeyPairBastion
         pEC2KeyPair: !Ref pEC2KeyPair
         pVPCTenancy: !Ref pVPCTenancy
-        pBastionAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
+        pBastionAmi:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - AMZNLINUXHVM
         pRegionAZ1Name: !Ref pAvailabilityZoneA
         pRegionAZ2Name: !Ref pAvailabilityZoneB
-        pEnvironment: !FindInMap [ CustomVariables, vResourceEnvironmentTagValue, Value ]
-        pBastionInstanceType: !If [ LaunchAsDedicatedInstance, m4.large, t2.small ]
-        pSupportsNatGateway: !FindInMap [ RegionServiceSupport, !Ref 'AWS::Region', NatGateway ]
-        pNatAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
-        pNatInstanceType: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', InstanceType ]
-        QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ]
+        pEnvironment:
+          !FindInMap
+          - CustomVariables
+          - vResourceEnvironmentTagValue
+          - Value
+        pBastionInstanceType:
+          !If
+          - LaunchAsDedicatedInstance
+          - m4.large
+          - t2.small
+        pSupportsNatGateway:
+          !FindInMap
+          - RegionServiceSupport
+          - !Ref AWS::Region
+          - NatGateway
+        pNatAmi:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - AMZNLINUXHVM
+        pNatInstanceType:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - InstanceType
+        QuickStartS3URL:
+          !FindInMap
+          - AWSInfoRegionMap
+          - !Ref AWS::Region
+          - QuickStartS3URL
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
   ConfigRulesTemplate:
     Type: AWS::CloudFormation::Stack
     Condition: LoadConfigRulesTemplate
     DependsOn:
-      - IamTemplate
-      - ProductionVpcTemplate
-      - ManagementVpcTemplate
-      - LoggingTemplate
+    - IamTemplate
+    - ProductionVpcTemplate
+    - ManagementVpcTemplate
+    - LoggingTemplate
     Properties:
-      TemplateURL: !Sub
+      TemplateURL:
+        !Sub
         - ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/submodules/quickstart-compliance-common/templates/config-rules.template
-        - { QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ] }
+        - QuickStartS3URL:
+            !FindInMap
+            - AWSInfoRegionMap
+            - !Ref AWS::Region
+            - QuickStartS3URL
       TimeoutInMinutes: 20
       Parameters:
-        pRequiredTagKey: !FindInMap [ CustomVariables, vResourceEnvironmentTagKey, Value ]
+        pRequiredTagKey:
+          !FindInMap
+          - CustomVariables
+          - vResourceEnvironmentTagKey
+          - Value
   ApplicationTemplate:
     Type: AWS::CloudFormation::Stack
     DependsOn: ProductionVpcTemplate
     Properties:
-      TemplateURL: !Sub
+      TemplateURL:
+        !Sub
         - ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/templates/application.template
-        - { QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ] }
+        - QuickStartS3URL:
+            !FindInMap
+            - AWSInfoRegionMap
+            - !Ref AWS::Region
+            - QuickStartS3URL
       TimeoutInMinutes: 30
       Parameters:
-        pSecurityAlarmTopic: !GetAtt [ LoggingTemplate, Outputs.rSecurityAlarmTopic ]
+        pSecurityAlarmTopic:
+          !GetAtt
+          - LoggingTemplate
+          - Outputs.rSecurityAlarmTopic
         pEC2KeyPair: !Ref pEC2KeyPair
         pProductionCIDR: 10.100.0.0/16
-        pProductionVPC: !GetAtt [ ProductionVpcTemplate, Outputs.rVPCProduction ]
-        pDMZSubnetA: !GetAtt [ ProductionVpcTemplate, Outputs.rDMZSubnetA ]
-        pDMZSubnetB: !GetAtt [ ProductionVpcTemplate, Outputs.rDMZSubnetB ]
-        pAppPrivateSubnetA: !GetAtt [ ProductionVpcTemplate, Outputs.rAppPrivateSubnetA ]
-        pAppPrivateSubnetB: !GetAtt [ ProductionVpcTemplate, Outputs.rAppPrivateSubnetB ]
-        pWebInstanceType: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', InstanceType ]
-        pAppInstanceType: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', InstanceType ]
-        pDBPrivateSubnetA: !GetAtt [ ProductionVpcTemplate, Outputs.rDBPrivateSubnetA ]
-        pDBPrivateSubnetB: !GetAtt [ ProductionVpcTemplate, Outputs.rDBPrivateSubnetB ]
+        pProductionVPC:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rVPCProduction
+        pDMZSubnetA:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rDMZSubnetA
+        pDMZSubnetB:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rDMZSubnetB
+        pAppPrivateSubnetA:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rAppPrivateSubnetA
+        pAppPrivateSubnetB:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rAppPrivateSubnetB
+        pWebInstanceType:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - InstanceType
+        pAppInstanceType:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - InstanceType
+        pDBPrivateSubnetA:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rDBPrivateSubnetA
+        pDBPrivateSubnetB:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rDBPrivateSubnetB
         pManagementCIDR: 10.10.0.0/16
         pRegionAZ1Name: !Ref pAvailabilityZoneA
         pRegionAZ2Name: !Ref pAvailabilityZoneB
-        pWebServerAMI: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
-        pAppAmi: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', AMZNLINUXHVM ]
+        pWebServerAMI:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - AMZNLINUXHVM
+        pAppAmi:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - AMZNLINUXHVM
         pDBUser: testuserdb
         pDBName: testDB
         pDBPassword: !Ref pDBPassword
-        pDBClass: !FindInMap [ AWSAMIRegionMap, !Ref 'AWS::Region', InstanceTypeDatabase ]
+        pDBClass:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - InstanceTypeDatabase
         pDBAllocatedStorage: 10
-        pEnvironment: !FindInMap [ CustomVariables, vResourceEnvironmentTagValue, Value ]
+        pEnvironment:
+          !FindInMap
+          - CustomVariables
+          - vResourceEnvironmentTagValue
+          - Value
         pBastionSSHCIDR: 0.0.0.0/0
-        pSupportsGlacier: !FindInMap [ RegionServiceSupport, !Ref 'AWS::Region', Glacier ]
-        QuickStartS3URL: !FindInMap [ AWSInfoRegionMap, !Ref 'AWS::Region', QuickStartS3URL ]
+        pSupportsGlacier:
+          !FindInMap
+          - RegionServiceSupport
+          - !Ref AWS::Region
+          - Glacier
+        QuickStartS3URL:
+          !FindInMap
+          - AWSInfoRegionMap
+          - !Ref AWS::Region
+          - QuickStartS3URL
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
 Outputs:
@@ -425,11 +594,22 @@ Outputs:
     Value: 2.0
   BastionIP:
     Description: Use this IP via SSH to connect to Bastion Instance
-    Value: !GetAtt [ ManagementVpcTemplate, Outputs.rBastionInstanceIP ]
+    Value:
+      !GetAtt
+      - ManagementVpcTemplate
+      - Outputs.rBastionInstanceIP
   LandingPageURL:
-    Value: !GetAtt [ ApplicationTemplate, Outputs.LandingPageURL ]
+    Value:
+      !GetAtt
+      - ApplicationTemplate
+      - Outputs.LandingPageURL
   WebsiteURL:
-    Value: !GetAtt [ ApplicationTemplate, Outputs.WebsiteURL ]
+    Value:
+      !GetAtt
+      - ApplicationTemplate
+      - Outputs.WebsiteURL
   Help:
-    Description: For assistance or questions regarding this quickstart please email compliance-accelerator@amazon.com
+    Description: For assistance or questions regarding this quickstart please email
+      compliance-accelerator@amazon.com
     Value: ''
+...
