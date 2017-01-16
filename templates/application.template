@@ -632,7 +632,6 @@ Resources:
         configSets:
           wordpress_install:
             - install_cfn
-            - copy_landing_content
             - install_wordpress
         install_cfn:
           files:
@@ -661,12 +660,6 @@ Resources:
                 files:
                   - /etc/cfn/cfn-hup.conf
                   - /etc/cfn/hooks.d/cfn-auto-reloader.conf
-        copy_landing_content:
-          sources:
-            /var/www/html: !Sub ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/landing.zip
-          commands:
-            01_configure_permissions:
-              command: sudo chmod 755 -R /var/www/html
         install_wordpress:
           packages:
             yum:
@@ -716,6 +709,24 @@ Resources:
 
           yum update -y
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource rAutoScalingConfigApp --configsets wordpress_install --region ${AWS::Region}
+
+          landing_page=/var/www/html/landing.html
+
+          # Download the landing page.
+          wget ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/landing/landing.html -O $landing_page
+
+          # Replace relative image links with links to the production S3 source.
+          sed -i 's|images|${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/landing/images|g' $landing_page
+
+          # Inject the landing page branding label.
+          sed -i 's|{compliance-body}|the PCI DSS|g' $landing_page
+
+          # Inject the survey link parameter.
+          sed -i 's|{compliance-body-survey-link}|pci|g' $landing_page
+
+          # Inject the security control matrix file location.
+          sed -i 's|{compliance-body-matrix}|${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/PCI-DSS3.2-Security-Controls-Mapping.xlsx|g' $landing_page
+          
   rAutoScalingGroupApp:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn: rAutoScalingConfigApp
