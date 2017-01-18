@@ -686,7 +686,7 @@ Resources:
                 define('WP_DEBUG', false);
 
                 if ( !defined('ABSPATH') )
-                	define('ABSPATH', dirname(__FILE__) . '/');
+                  define('ABSPATH', dirname(__FILE__) . '/');
 
                 require_once(ABSPATH . 'wp-settings.php');
               mode: '000644'
@@ -710,23 +710,30 @@ Resources:
           yum update -y
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource rAutoScalingConfigApp --configsets wordpress_install --region ${AWS::Region}
 
-          landing_page=/var/www/html/landing.html
+          ######################################################################
+          #     NOTE: UPDATE THESE VALUES ACCORDING TO THE COMPLIANCE BODY     #
+          ######################################################################
+          LANDING_PAGE="/var/www/html/landing.html"
+          COMPLIANCE_BODY_LABEL="PCI DSS"
+          COMPLIANCE_SURVEY_LINK="pci"
+          COMPLIANCE_MATRIX_FILENAME="PCI-DSS3.2-Security-Controls-Mapping.xlsx"
+          ######################################################################
 
           # Download the landing page.
-          wget ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/landing/landing.html -O $landing_page
+          sudo wget ${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/landing/landing.html -O $LANDING_PAGE
 
           # Replace relative image links with links to the production S3 source.
-          sed -i 's|images|${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/landing/images|g' $landing_page
+          sudo sed -i 's|images|${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/landing/images|g' $LANDING_PAGE
 
           # Inject the landing page branding label.
-          sed -i 's|{compliance-body}|the PCI DSS|g' $landing_page
+          sudo sed -i "s|{compliance-body}|$COMPLIANCE_BODY_LABEL|g" $LANDING_PAGE
 
           # Inject the survey link parameter.
-          sed -i 's|{compliance-body-survey-link}|pci|g' $landing_page
+          sudo sed -i "s|{compliance-body-survey-link}|$COMPLIANCE_SURVEY_LINK|g" $LANDING_PAGE
 
           # Inject the security control matrix file location.
-          sed -i 's|{compliance-body-matrix}|${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/PCI-DSS3.2-Security-Controls-Mapping.xlsx|g' $landing_page
-          
+          sudo sed -i "s|{compliance-body-matrix}|${QuickStartS3URL}/${QSS3BucketName}/${QSS3KeyPrefix}/assets/$COMPLIANCE_MATRIX_FILENAME|g" $LANDING_PAGE
+
   rAutoScalingGroupApp:
     Type: AWS::AutoScaling::AutoScalingGroup
     DependsOn: rAutoScalingConfigApp
