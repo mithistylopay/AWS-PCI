@@ -182,10 +182,10 @@ Mappings:
       Glacier: true
     us-west-1:
       ConfigRules: true
-      NatGateway: false
-      Glacier: false
+      NatGateway: true
+      Glacier: true
     us-west-2:
-      ConfigRules: false
+      ConfigRules: true
       NatGateway: true
       Glacier: true
     ca-central-1:
@@ -211,7 +211,7 @@ Mappings:
     ap-northeast-2:
       ConfigRules: true
       NatGateway: true
-      Glacier: false
+      Glacier: true
     ap-south-1:
       ConfigRules: false
       NatGateway: true
