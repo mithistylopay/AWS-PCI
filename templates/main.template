@@ -234,53 +234,53 @@ Mappings:
       Glacier: false
   AWSAMIRegionMap:
     AMI:
-      AMZNLINUXHVM: amzn-ami-hvm-2016.03.3.x86_64-gp2
+      AMZNLINUXHVM: amzn-ami-hvm-2016.09.1.20161221-x86_64-gp2
     ap-northeast-1:
-      AMZNLINUXHVM: ami-374db956
+      AMZNLINUXHVM: ami-9f0c67f8
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-northeast-2:
-      AMZNLINUXHVM: ami-2b408b45
+      AMZNLINUXHVM: ami-94bb6dfa
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-south-1:
-      AMZNLINUXHVM: ami-ffbdd790
+      AMZNLINUXHVM: ami-9fc7b0f0
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-southeast-1:
-      AMZNLINUXHVM: ami-a59b49c6
+      AMZNLINUXHVM: ami-4dd6782e
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ap-southeast-2:
-      AMZNLINUXHVM: ami-dc361ebf
+      AMZNLINUXHVM: ami-28cff44b
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     ca-central-1:
-      AMZNLINUXHVM: ami-730ebd17
+      AMZNLINUXHVM: ami-eb20928f
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     eu-central-1:
-      AMZNLINUXHVM: ami-ea26ce85
+      AMZNLINUXHVM: ami-211ada4e
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     eu-west-1:
-      AMZNLINUXHVM: ami-f9dd458a
+      AMZNLINUXHVM: ami-c51e3eb6
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     eu-west-2:
-      AMZNLINUXHVM: ami-886369ec
+      AMZNLINUXHVM: ami-bfe0eadb
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     sa-east-1:
-      AMZNLINUXHVM: ami-6dd04501
+      AMZNLINUXHVM: ami-bb40d8d7
       InstanceType: m4.large
       InstanceTypeDatabase: db.m3.large
     us-east-1:
-      AMZNLINUXHVM: ami-6869aa05
+      AMZNLINUXHVM: ami-9be6f38c
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-east-2:
-      AMZNLINUXHVM: ami-f6035893
+      AMZNLINUXHVM: ami-38cd975d
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-gov-west-1:
@@ -288,11 +288,11 @@ Mappings:
       InstanceType: m4.large
       InstanceTypeDatabase: db.m3.large
     us-west-1:
-      AMZNLINUXHVM: ami-31490d51
+      AMZNLINUXHVM: ami-b73d6cd7
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-west-2:
-      AMZNLINUXHVM: ami-7172b611
+      AMZNLINUXHVM: ami-1e299d7e
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
 Conditions:
