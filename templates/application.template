@@ -901,6 +901,9 @@ Resources:
             --message "What now? Click here for more information: https://${rELBWeb.DNSName}/landing.html. Please note that the application server might be finishing up its initialization. If the link doesn't respond right away, please try it again in few minutes. This page resides on an application server in your new environment." \
             --region ${AWS::Region}
 
+          echo Sleeping for 2 minutes to allow CloudFormation to catch up
+          sleep 120
+          
           echo Self-destruct!
           aws ec2 terminate-instances --instance-id $(curl -s http://169.254.169.254/latest/meta-data/instance-id) --region ${AWS::Region}
           echo *** ELB HTTPS configuration complete ***
@@ -922,7 +925,7 @@ Outputs:
     Value: !Ref rSecurityGroupRDS
   SurveyLink:
     Description: Please take a moment to complete the survey by clicking this link
-    Value: https://aws.au1.qualtrics.com/SE/?SID=SV_55sYYdtY1NhTTgN&qs=pci
+    Value: https://aws.au1.qualtrics.com/SE/?SID=SV_55sYYdtY1NhTTgN&qs=${COMPLIANCE_SURVEY_LINK}
   Help:
     Description: For assistance or questions regarding this quickstart please email compliance-accelerator@amazon.com
     Value: ''
