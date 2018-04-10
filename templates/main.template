@@ -123,65 +123,65 @@ Mappings:
       Value: development
   RegionServiceSupport:
     ap-northeast-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     ap-northeast-2:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     ap-south-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     ap-southeast-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     ap-southeast-2:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     ca-central-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     eu-central-1:
-      NatGateway: true
-      ConfigRules: true
-      Glacier: true
+      NatGateway: 'true'
+      ConfigRules: 'true'
+      Glacier: 'true'
     eu-west-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     eu-west-2:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     sa-east-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: false
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'false'
     us-east-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     us-east-2:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     us-gov-west-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     us-west-1:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
     us-west-2:
-      ConfigRules: true
-      NatGateway: true
-      Glacier: true
+      ConfigRules: 'true'
+      NatGateway: 'true'
+      Glacier: 'true'
   AWSAMIRegionMap:
     AMI:
       AMZNLINUXHVM: amzn-ami-hvm-2017.09.1.20180307-x86_64-gp2
