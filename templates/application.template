@@ -198,7 +198,7 @@ Conditions:
   SupportsGlacier:
     !Equals
     - !Ref pSupportsGlacier
-    - true
+    - 'true'
 Resources:
   rS3ELBAccessLogs:
     Type: AWS::S3::Bucket
