@@ -1,9 +1,14 @@
-#quickstart-enterprise-accelerator-pci
+# quickstart-compliance-pci
+## Standardized Architecture for PCI DSS on the AWS Cloud
 
 The PCI Enterprise Accelerator Quick Start deploys a standardized environment that helps organizations with workloads that fall in scope for Payment Card Industry (PCI) Data Security Standard (DSS) compliance.
 
-The Quick Start will deploy a standard three-tier web architecture using multiple Amazon VPCs (notional development Amazon VPC shown):
+The Quick Start will deploy a standard three-tier web architecture using multiple VPCs.
 
-![Architecture](https://docs.aws.amazon.com/quickstart/latest/accelerator-pci/images/pci-on-aws-architecture.png)
+![Architecture](https://d0.awsstatic.com/partner-network/QuickStart/datasheets/pci-on-aws-architecture.png)
 
-You can find more information on the "Standardized Architecture for PCI DSS on the AWS Cloud: Quick Start Reference Deployment" [web page](https://docs.aws.amazon.com/quickstart/latest/accelerator-pci/welcome.html).
+For architectural details, best practices, step-by-step instructions, and customization options, see the 
+[deployment guide](https://fwd.aws/zmYVY).
+
+To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
+If you'd like to submit code for this Quick Start, please review the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/). 
