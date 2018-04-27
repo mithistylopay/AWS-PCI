@@ -1,7 +1,7 @@
 # quickstart-compliance-pci
 ## Standardized Architecture for PCI DSS on the AWS Cloud
 
-The PCI Enterprise Accelerator Quick Start deploys a standardized environment that helps organizations with workloads that fall in scope for Payment Card Industry (PCI) Data Security Standard (DSS) compliance.
+This Quick Start deploys a standardized environment that helps organizations with workloads that fall in scope for Payment Card Industry (PCI) Data Security Standard (DSS) compliance.
 
 The Quick Start will deploy a standard three-tier web architecture using multiple VPCs.
 
