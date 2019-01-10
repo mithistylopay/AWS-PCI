@@ -512,7 +512,7 @@ Resources:
           - AWSAMIRegionMap
           - !Ref AWS::Region
           - InstanceTypeDatabase
-        pDBAllocatedStorage: 10
+        pDBAllocatedStorage: "10"
         pEnvironment:
           !FindInMap
           - CustomVariables

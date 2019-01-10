@@ -1,7 +1,7 @@
 [
     {
         "ParameterKey": "pDBPassword",
-        "ParameterValue": "$[alfred_genpass_28]"
+        "ParameterValue": "$[taskcat_genpass_28]"
     },
     {
         "ParameterKey": "pNotifyEmail",
@@ -9,11 +9,11 @@
     },
     {
         "ParameterKey": "pEC2KeyPairBastion",
-        "ParameterValue": "$[alfred_getkeypair]"
+        "ParameterValue": "$[taskcat_getkeypair]"
     },
     {
         "ParameterKey": "pEC2KeyPair",
-        "ParameterValue": "$[alfred_getkeypair]"
+        "ParameterValue": "$[taskcat_getkeypair]"
     },
     {
         "ParameterKey": "pSupportsConfig",
@@ -21,11 +21,11 @@
     },
     {
         "ParameterKey": "pAvailabilityZoneA",
-        "ParameterValue": "$[alfred_getsingleaz_1]"
+        "ParameterValue": "$[taskcat_getsingleaz_1]"
     },
     {
         "ParameterKey": "pAvailabilityZoneB",
-        "ParameterValue": "$[alfred_getsingleaz_2]"
+        "ParameterValue": "$[taskcat_getsingleaz_2]"
     },
     {
         "ParameterKey": "pVPCTenancy",
