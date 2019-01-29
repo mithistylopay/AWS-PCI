@@ -18,6 +18,6 @@ global:
   # - sa-east-1
   reporting: true
 tests:
-  defaults:
+  compl-pci:
     parameter_input: defaults.json
     template_file: main.template
