@@ -142,116 +142,71 @@ Parameters:
       forward slash (/). If you are unsure, do not change this value.
     Type: String
 Mappings:
-  RegionServiceSupport:
-    ap-northeast-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    ap-northeast-2:
-      NatGateway: 'true'
-      Glacier: 'true'
-    ap-south-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    ap-southeast-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    ap-southeast-2:
-      NatGateway: 'true'
-      Glacier: 'true'
-    ca-central-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    eu-central-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    eu-west-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    eu-west-2:
-      NatGateway: 'true'
-      Glacier: 'true'
-    sa-east-1:
-      NatGateway: 'true'
-      Glacier: 'false'
-    us-east-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    us-east-2:
-      NatGateway: 'true'
-      Glacier: 'true'
-    us-gov-west-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    us-west-1:
-      NatGateway: 'true'
-      Glacier: 'true'
-    us-west-2:
-      NatGateway: 'true'
-      Glacier: 'true'
 #these have been updated to a 2019 version
   AWSAMIRegionMap:
     AMI:
       AMZNLINUXHVM: amzn-ami-hvm-2018.03.0.20190514-x86_64-gp2
     ap-northeast-1:
       AMZNLINUXHVM: ami-0ccdbc8c1cb7957be
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ap-northeast-2:
       AMZNLINUXHVM: ami-082b5ca9ff663f3b8
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ap-south-1:
       AMZNLINUXHVM: ami-0eacc5b7915ba9921
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ap-southeast-1:
       AMZNLINUXHVM: ami-03097abf0db1cdff2
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ap-southeast-2:
       AMZNLINUXHVM: ami-05067171f4230ac41
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ca-central-1:
       AMZNLINUXHVM: ami-07ab3281411d31d04
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     eu-central-1:
       AMZNLINUXHVM: ami-03a71cec707bfc3d7
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     eu-west-1:
       AMZNLINUXHVM: ami-03c242f4af81b2365
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     eu-west-2:
       AMZNLINUXHVM: ami-05663d374a152d239
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     sa-east-1:
       AMZNLINUXHVM: ami-0eb2a191bf5e40e10
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m3.large
     us-east-1:
       AMZNLINUXHVM: ami-0756fbca465a59a30
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     us-east-2:
       AMZNLINUXHVM: ami-04768381bf606e2b3
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     us-gov-west-1:
       AMZNLINUXHVM: ami-ffa61d9e
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m3.large
     us-west-1:
       AMZNLINUXHVM: ami-063dd30adbb186909
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     us-west-2:
       AMZNLINUXHVM: ami-07a0c6e669965bb7c
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
+  RegionServiceSupport:
+    ap-northeast-1:
+      NatGateway: 'true'
+    ap-northeast-2:
+      NatGateway: 'true'
+    ap-south-1:
+      NatGateway: 'true'
+    ap-southeast-1:
+      NatGateway: 'true'
+    ap-southeast-2:
+      NatGateway: 'true'
+    ca-central-1:
+      NatGateway: 'true'
+    eu-central-1:
+      NatGateway: 'true'
+    eu-west-1:
+      NatGateway: 'true'
+    eu-west-2:
+      NatGateway: 'true'
+    sa-east-1:
+      NatGateway: 'false'
+    us-east-1:
+      NatGateway: 'true'
+    us-east-2:
+      NatGateway: 'true'
+    us-gov-west-1:
+      NatGateway: 'true'
+    us-west-1:
+      NatGateway: 'true'
+    us-west-2:
+      NatGateway: 'true'
 Conditions:
   GovCloudCondition:
     !Equals
@@ -374,12 +329,14 @@ Resources:
   ProductionVpcTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: https://cloudformationlctemplates.s3.amazonaws.com/vpc-production.template_LCQS
-      QSS3Region:
-        !If
-        - GovCloudCondition
-        - s3-us-gov-west-1
-        - s3
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-compliance-common/templates/vpc-production.template
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
       TimeoutInMinutes: 20
       Parameters:
         pRegionAZ1Name: !Ref pAvailabilityZoneA
@@ -416,12 +373,14 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn: ProductionVpcTemplate
     Properties:
-      TemplateURL: https://cloudformationlctemplates.s3.amazonaws.com/vpc-management.template_LCQS
-      QSS3Region:
-        !If
-        - GovCloudCondition
-        - s3-us-gov-west-1
-        - s3
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-compliance-common/templates/vpc-management.template
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
       TimeoutInMinutes: 20
       Parameters:
         pProductionVPC:
@@ -454,7 +413,6 @@ Resources:
           - AMZNLINUXHVM
         pRegionAZ1Name: !Ref pAvailabilityZoneA
         pRegionAZ2Name: !Ref pAvailabilityZoneB
-
         pBastionInstanceType:
           !If
           - LaunchAsDedicatedInstance
