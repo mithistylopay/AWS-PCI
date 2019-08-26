@@ -11,65 +11,65 @@
 		width: 100%;
 		background-color: black;
 	}
-	
+
 	#amazon_logo {
 		float: left;
 		padding-left: 20px;
 	}
-	
+
 	.section_header {
 		font-size: 1.5em;
 		font-weight: 500;
 		padding-bottom: 20px;
 		color: #1F3D5C;
 	}
-	
+
 	.section_text {
 		font-size: .9em;
 	}
-	
+
 	#container_congratulations {
 		margin: none;
 		height: 100px;
 		padding-top: 15px;
 	}
-	
+
 	#cell_congratulations {
 		padding-top: 15px;
 		font-size: 2.4em;
 		color: #e47911;
 	}
-	
+
 	#intro_message {
 		display: block;
 		font-size: 1.25em;
 		margin-bottom: 20px;
 	}
-	
+
 	.container {
 		_margin-top: 10px;
 		margin-bottom: 20px;
 		padding-left: 20px;
 	}
-	
+
 	#container_what_now {
 		height: 260px;
 	}
-	
+
 	#what_now_body {
 		width: 900px;
 		display: inline-block;
 		float: left;
 	}
-	
+
 	#what_now_image {
 		padding-top: 0px;
 	}
-	
+
 	#container_architecture {
 		margin-bottom: 75px;
 	}
-	
+
 	#architecture_image {
 		float: left;
 	}
@@ -96,21 +96,21 @@
 		color: #e47911;
 		font-weight: 500;
 	}
-	
+
 	#container_page_details {
 	}
-	
+
 	#page_details_body {
 		width: 550px;
 		float: left;
 		margin-right: 50px;
 		text-align: justify;
 	}
-	
+
 	#page_details_image {
-		
+
 	}
-	
+
 	.a-divider-inner {
 		height: 120px;
 		margin-bottom: -90px;
@@ -124,7 +124,7 @@
 		display: table-cell;
 		vertical-align: middle;
 	}
-	
+
 	.aws-block {
 		background-image: url("images/block.png");
 		background-repeat: no-repeat;
@@ -133,10 +133,10 @@
 		width: 30px;
 		float: left;
 		display: table-cell;
-		background-position: center; 
+		background-position: center;
 		margin-right: 10px;
 	}
-	
+
 	.border {
 		border-style: none;
 		border-width: thin;
@@ -147,9 +147,9 @@
 <body>
 
 	<div id="top_bar"></div>
-	
+
 	<div id="container_congratulations">
-		<div id="amazon_logo"><img src="images/aws.png"></div>
+		<div id="amazon_logo"><img src="images/aws_sas.png"></div>
 		<div id="cell_congratulations"><center>Congratulations!</center></div>
 	</div>
 
@@ -158,7 +158,7 @@
 	</div>
 
 	<div class="a-divider-inner"></div>
-	
+
 	<div id="container_what_now" class="container border">
 		<div class="section_header border">What Now?</div>
 		<div>
@@ -191,11 +191,11 @@
 			<div id="what_now_image" class="border"><img src="images/compliance.png"></div>
 		</div>
 	</div>
-	
+
 	<div class="a-divider-inner"></div>
-	
+
 	<div id="container_architecture" class="container border">
-		<div id="architecture_image" class="border"><a href="images/quick-start-architecture.png" target="_blank"><img src="images/quick-start-architecture.png" height="380" width="511" alt="Network Architecture" title="Click to enlarge"></a></div>
+		<div id="architecture_image" class="border"><a href="images/quick-start-architecture.png" target="_blank"><img src="images/quick-start-architecture.png" height="380" width="511" alt="Network Architecture" title="Click to enlarge" img style="padding-right:120px; padding-left:50px"></a></div>
 		<div id="architecture_body" class="border">
 			<div class="section_header border">Architecture</div>
 			<div class="section_text border">
@@ -215,21 +215,6 @@
 	</div>
 
 	<div class="a-divider-inner"></div>
-	
-	<div id="container_page_details" class="container border">
-		<div class="section_header border">Details About This Page</div>
-		<div>
-			<div id="page_details_body" class="section_text border">
-				<p>
-				The page you're viewing right now resides on an application server instance that resides in an Auto Scaling Group in a private subnet (highlighted in the diagram). The application server instances can only be accessed by the load-balanced proxy servers.
-				</p>
-				<p>
-				The VPC in <a href="images/quick-start-vpc-highlight.png" target="_blank">this diagram</a> is one of three VPCs created in the Quick Start architecture. The CloudFormation stack creates and installs the WordPress application using the application statck. To customize your implementation of this Quick Start, modify the application stack to suit the needs of your application.
-				</p>
-			</div>
-			<div id="page_details_image border"><a href="images/quick-start-vpc-highlight.png" target="_blank"><img src="images/quick-start-vpc-highlight.png" height="330" width="510 title="Click to enlarge"></a></div>
-		</div>
-	</div>
-	
+
 </body>
 </html>

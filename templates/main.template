@@ -1,12 +1,11 @@
 ---
 AWSTemplateFormatVersion: 2010-09-09
-Description: Provides nesting for required stacks to deploy a full sample web application
-  with reverse proxy, ELBs, IAM, and other resources (for demonstration/POC/testing)
+Description: Provides nesting for required stacks to deploy a baseline architecure to support PCI compliance.
 Metadata:
   Stack:
     Value: 0
   VersionDate:
-    Value: 20160518
+    Value: 20190805
   Identifier:
     Value: main
   Input:
@@ -18,11 +17,8 @@ Metadata:
     - Label:
         default: 'Please provide the following parameter values:'
       Parameters:
-      - pDBPassword
-      - pNotifyEmail
       - pEC2KeyPairBastion
       - pEC2KeyPair
-      - pSupportsConfig
       - pAvailabilityZoneA
       - pAvailabilityZoneB
     - Label:
@@ -30,17 +26,22 @@ Metadata:
       Parameters:
       - QSS3BucketName
       - QSS3KeyPrefix
+    - Label:
+        default: IAM Password Policy
+      Parameters:
+      - MaxPasswordAge
+      - MinPasswordLength
+      - PasswordHistory
+      - RequireLowercaseChars
+      - RequireNumbers
+      - RequireSymbols
+      - RequireUppercaseChars
+
     ParameterLabels:
-      pDBPassword:
-        default: Database Password
-      pNotifyEmail:
-        default: Notification Email Address
       pEC2KeyPairBastion:
-        default: Existing SSH Key for the Bastion Instance
+        default: Existing SSH Key for the Bastion Instance. This should have been created in the pre-deployment steps.
       pEC2KeyPair:
-        default: Existing SSH Key for Other Instances
-      pSupportsConfig:
-        default: Support Config
+        default: Existing SSH Key for Other Instances. This should have been created in the pre-deployment steps.
       pAvailabilityZoneA:
         default: First Availability Zone
       pAvailabilityZoneB:
@@ -52,21 +53,6 @@ Metadata:
       QSS3KeyPrefix:
         default: Quick Start S3 Key Prefix
 Parameters:
-  pDBPassword:
-    Description: Mixed alphanumeric and must be between 8 and 28 characters and contain
-      at least one capital letter
-    NoEcho: true
-    Type: String
-    MinLength: 8
-    MaxLength: 28
-    AllowedPattern: '[a-zA-Z0-9!^*\-_+]*'
-    ConstraintDescription: Can only contain alphanumeric characters or the following
-      special characters !^*-_+, between 8 and 28 characters
-  pNotifyEmail:
-    Description: Notification email address for security events (you will receive
-      a confirmation email)
-    Type: String
-    Default: distlist@example.org
   pEC2KeyPairBastion:
     Description: The SSH key pair in your account to use for the bastion host login
     Type: AWS::EC2::KeyPair::KeyName
@@ -74,23 +60,63 @@ Parameters:
     Description: The SSH key pair in your account to use for all other EC2 instance
       logins
     Type: AWS::EC2::KeyPair::KeyName
-  pSupportsConfig:
-    Description: Is AWS Config Rules already configured for this region? Use ''false''
-      if you are uncertain. See AWS Config Management Console or Deployment Guide
-      for details.
-    AllowedValues:
-    - 'true'
-    - 'false'
-    Default: 'false'
-    Type: String
   pAvailabilityZoneA:
     Description: Availability Zone 1
     Type: AWS::EC2::AvailabilityZone::Name
   pAvailabilityZoneB:
-    Description: Availability Zone 2
+    Description: Availability Zone 2. NOTE - This should be different than the AZ above.
     Type: AWS::EC2::AvailabilityZone::Name
+  MaxPasswordAge:
+    Type: 'Number'
+    Description: 'Maximum age for passwords'
+    Default: 90
+    ConstraintDescription: '(90-365 days)'
+    MinValue: 1
+    MaxValue: 90
+  MinPasswordLength:
+    Type: 'Number'
+    Description: 'Minimum password length'
+    Default: 7
+    ConstraintDescription: '(8-128 characters)'
+    MinValue: 7
+    MaxValue: 128
+  PasswordHistory:
+    Type: 'Number'
+    Description: 'Number of previous passwords to remember'
+    Default: 4
+    ConstraintDescription: '(1-24 passwords)'
+    MinValue: 4
+    MaxValue: 24
+  RequireLowercaseChars:
+    Type: 'String'
+    Description: 'Require at least one lowercase character'
+    Default: 'True'
+    AllowedValues:
+    - 'True'
+    - 'False'
+  RequireNumbers:
+    Type: 'String'
+    Description: 'Require at least one number'
+    Default: 'True'
+    AllowedValues:
+    - 'True'
+    - 'False'
+  RequireSymbols:
+    Type: 'String'
+    Description: 'Require at least one symbol'
+    Default: 'True'
+    AllowedValues:
+    - 'True'
+    - 'False'
+  RequireUppercaseChars:
+    Type: 'String'
+    Description: 'Require at least one uppercase character'
+    Default: 'True'
+    AllowedValues:
+    - 'True'
+    - 'False'
   pVPCTenancy:
-    Description: Instance tenancy behavior for this VPC
+    Description: Instance tenancy behavior for this VPC. If unsure, leave as default.
     Type: String
     Default: default
     AllowedValues:
@@ -100,84 +126,54 @@ Parameters:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase
       letters, uppercase letters, periods (.), and hyphens (-). It cannot start or
-      end with a hyphen (-).
+      end with a hyphen (-). If you are unsure, do not change this value.
     Default: aws-quickstart
     Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
       can include numbers, lowercase letters, uppercase letters, and hyphens (-).
-      It cannot start or end with a hyphen (-).
+      It cannot start or end with a hyphen (-). If you are unsure, do not change this value.
     Type: String
   QSS3KeyPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
-      uppercase letters, hyphens (-), and forward slash (/).
+      uppercase letters, hyphens (-), and forward slash (/). If you are unsure, do not change this value.
     Default: quickstart-compliance-pci/
     Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
-      forward slash (/).
+      forward slash (/). If you are unsure, do not change this value.
     Type: String
 Mappings:
-  CustomVariables:
-    vResourceEnvironmentTagKey:
-      Value: Environment
-    vResourceEnvironmentTagValue:
-      Value: development
-  RegionServiceSupport:
+#these have been updated to a 2019 version
+  AWSAMIRegionMap:
+    AMI:
+      AMZNLINUXHVM: amzn-ami-hvm-2018.03.0.20190514-x86_64-gp2
     ap-northeast-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-0ccdbc8c1cb7957be
     ap-northeast-2:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-082b5ca9ff663f3b8
     ap-south-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-0eacc5b7915ba9921
     ap-southeast-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-03097abf0db1cdff2
     ap-southeast-2:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-05067171f4230ac41
     ca-central-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-07ab3281411d31d04
     eu-central-1:
-      NatGateway: 'true'
-      ConfigRules: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-03a71cec707bfc3d7
     eu-west-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-03c242f4af81b2365
     eu-west-2:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-05663d374a152d239
     sa-east-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'false'
+      AMZNLINUXHVM: ami-0eb2a191bf5e40e10
     us-east-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-0756fbca465a59a30
     us-east-2:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-04768381bf606e2b3
     us-gov-west-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-ffa61d9e
     us-west-1:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
+      AMZNLINUXHVM: ami-063dd30adbb186909
     us-west-2:
       ConfigRules: 'true'
       NatGateway: 'true'
@@ -234,9 +230,7 @@ Mappings:
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
     us-gov-west-1:
-      AMZNLINUXHVM: ami-ffa61d9e
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m3.large
+      NatGateway: 'true'
     us-west-1:
       AMZNLINUXHVM: ami-0fcdcdb074d2bac5f
       InstanceType: m4.large
@@ -250,15 +244,108 @@ Conditions:
     !Equals
     - !Ref AWS::Region
     - us-gov-west-1
-  LoadConfigRulesTemplate:
-    !Equals
-    - !Ref pSupportsConfig
-    - 'true'
   LaunchAsDedicatedInstance:
     !Equals
     - !Ref pVPCTenancy
     - dedicated
 Resources:
+  IAMPasswordPolicy:
+    Type: 'Custom::IAMPolicyResource'
+    Properties:
+      ServiceToken: !GetAtt IAMPasswordPolicyResource.Arn
+      Region: !Ref "AWS::Region"
+
+  IAMPasswordPolicyResource:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Runtime: python2.7
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Timeout: 30
+      Role: !GetAtt IAMPasswordPolicyResourceExecutionRole.Arn
+      Code:
+        ZipFile: !Sub |
+          import boto3
+          from botocore.exceptions import ClientError
+          import json
+          import cfnresponse
+
+          iam = boto3.client("iam")
+
+          # Lambda entry point
+          def lambda_handler(event, context):
+
+            if event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
+              res, reason = update_policy()
+            elif event['RequestType'] == 'Delete':
+              res, reason = delete_policy()
+            else:
+              res = False
+              reason = "Unknown operation: " + event['RequestType']
+            responseData = {}
+            responseData['Reason'] = reason
+            if res:
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+            else:
+              cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
+
+          def update_policy():
+            try:
+
+              response = iam.update_account_password_policy(
+                  AllowUsersToChangePassword=True,
+                  HardExpiry=False,
+                  MaxPasswordAge=${MaxPasswordAge},
+                  MinimumPasswordLength=${MinPasswordLength},
+                  RequireLowercaseCharacters=${RequireLowercaseChars},
+                  RequireNumbers=${RequireNumbers},
+                  RequireSymbols=${RequireSymbols},
+                  RequireUppercaseCharacters=${RequireUppercaseChars},
+                  PasswordReusePrevention=${PasswordHistory})
+
+              return(True, response)
+            except Exception as e:
+              return (False, "Cannot update policy: " + str(e))
+
+          def delete_policy():
+            try:
+
+              policy = iam.get_account_password_policy()
+              response = iam.delete_account_password_policy()
+              return (True, response)
+            except Exception as e:
+              return (False, "Cannot delete policy: " + str(e))
+
+  IAMPasswordPolicyResourceExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: IAMPasswordCreatorPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: 'Allow'
+            Action:
+            - 'logs:CreateLogGroup'
+            - 'logs:CreateLogStream'
+            - 'logs:PutLogEvents'
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - iam:GetAccountPasswordPolicy
+              - iam:UpdateAccountPasswordPolicy
+              - iam:DeleteAccountPasswordPolicy
+            Resource: "*"
   IamTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -271,25 +358,6 @@ Resources:
             - s3-us-gov-west-1
             - s3
       TimeoutInMinutes: 20
-  LoggingTemplate:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL:
-        !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-compliance-common/templates/logging.template
-        - QSS3Region:
-            !If
-            - GovCloudCondition
-            - s3-us-gov-west-1
-            - s3
-      TimeoutInMinutes: 20
-      Parameters:
-        pNotifyEmail: !Ref pNotifyEmail
-        pSupportsGlacier:
-          !FindInMap
-          - RegionServiceSupport
-          - !Ref AWS::Region
-          - Glacier
   ProductionVpcTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -315,11 +383,6 @@ Resources:
         pDBPrivateSubnetACIDR: 10.100.194.0/21
         pDBPrivateSubnetBCIDR: 10.100.212.0/21
         pVPCTenancy: !Ref pVPCTenancy
-        pEnvironment:
-          !FindInMap
-          - CustomVariables
-          - vResourceEnvironmentTagValue
-          - Value
         pEC2KeyPair: !Ref pEC2KeyPair
         pSupportsNatGateway:
           !FindInMap
@@ -382,11 +445,6 @@ Resources:
           - AMZNLINUXHVM
         pRegionAZ1Name: !Ref pAvailabilityZoneA
         pRegionAZ2Name: !Ref pAvailabilityZoneB
-        pEnvironment:
-          !FindInMap
-          - CustomVariables
-          - vResourceEnvironmentTagValue
-          - Value
         pBastionInstanceType:
           !If
           - LaunchAsDedicatedInstance
@@ -528,26 +586,15 @@ Resources:
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
 Outputs:
   TemplateType:
-    Value: Standard Multi-Tier Web Application
+    Value: Standard Architecture
   TemplateVersion:
-    Value: 2.0
+    Value: 2.5
   BastionIP:
     Description: Use this IP via SSH to connect to Bastion Instance
     Value:
       !GetAtt
       - ManagementVpcTemplate
       - Outputs.rBastionInstanceIP
-  LandingPageURL:
-    Value:
-      !GetAtt
-      - ApplicationTemplate
-      - Outputs.LandingPageURL
-  WebsiteURL:
-    Value:
-      !GetAtt
-      - ApplicationTemplate
-      - Outputs.WebsiteURL
-  Help:
     Description: For assistance or questions regarding this quickstart please email
       compliance-accelerator@amazon.com
     Value: ''
