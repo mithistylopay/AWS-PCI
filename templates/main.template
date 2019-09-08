@@ -17,10 +17,10 @@ Metadata:
     - Label:
         default: 'Please provide the following parameter values:'
       Parameters:
-      - pEC2KeyPairBastion
-      - pEC2KeyPair
-      - pAvailabilityZoneA
-      - pAvailabilityZoneB
+      - EC2KeyPairBastion
+      - EC2KeyPair
+      - AvailabilityZoneA
+      - AvailabilityZoneB
     - Label:
         default: AWS Quick Start Configuration
       Parameters:
@@ -36,34 +36,38 @@ Metadata:
       - RequireNumbers
       - RequireSymbols
       - RequireUppercaseChars
-
     ParameterLabels:
-      pEC2KeyPairBastion:
+      EC2KeyPairBastion:
         default: Existing SSH Key for the Bastion Instance. This should have been created in the pre-deployment steps.
-      pEC2KeyPair:
+      EC2KeyPair:
         default: Existing SSH Key for Other Instances. This should have been created in the pre-deployment steps.
-      pAvailabilityZoneA:
+    AvailabilityZones:
+      Description: List of Availability Zones to use for the subnets in the VPC. This deployment uses two
+        Availability Zones, and the logical order of your
+        selections is preserved.
+      Type: List<AWS::EC2::AvailabilityZone::Name>
+      AvailabilityZoneA:
         default: First Availability Zone
-      pAvailabilityZoneB:
+      AvailabilityZoneB:
         default: Second Availability zone
-      pVPCTenancy:
+      VPCTenancy:
         default: Instance tenancy
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
         default: Quick Start S3 Key Prefix
 Parameters:
-  pEC2KeyPairBastion:
+  EC2KeyPairBastion:
     Description: The SSH key pair in your account to use for the bastion host login
     Type: AWS::EC2::KeyPair::KeyName
-  pEC2KeyPair:
+  EC2KeyPair:
     Description: The SSH key pair in your account to use for all other EC2 instance
       logins
     Type: AWS::EC2::KeyPair::KeyName
-  pAvailabilityZoneA:
+  AvailabilityZoneA:
     Description: Availability Zone 1
     Type: AWS::EC2::AvailabilityZone::Name
-  pAvailabilityZoneB:
+  AvailabilityZoneB:
     Description: Availability Zone 2. NOTE - This should be different than the AZ above.
     Type: AWS::EC2::AvailabilityZone::Name
   MaxPasswordAge:
@@ -115,7 +119,7 @@ Parameters:
     AllowedValues:
     - 'True'
     - 'False'
-  pVPCTenancy:
+  VPCTenancy:
     Description: Instance tenancy behavior for this VPC. If unsure, leave as default.
     Type: String
     Default: default
@@ -142,10 +146,54 @@ Parameters:
       forward slash (/). If you are unsure, do not change this value.
     Type: String
 Mappings:
-#these have been updated to a 2019 version
+  Instances:
+    ap-northeast-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ap-northeast-2:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ap-south-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ap-southeast-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ap-southeast-2:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    ca-central-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    eu-central-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    eu-west-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    eu-west-2:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    sa-east-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m3.large
+    us-east-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    us-east-2:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    # us-gov-west-1:
+    #   NatGateway: 'true'
+    us-west-1:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+    us-west-2:
+      InstanceType: m4.large
+      InstanceTypeDatabase: db.m4.large
+      ConfigRules: 'true'
+      Glacier: 'true'
   AWSAMIRegionMap:
-    AMI:
-      AMZNLINUXHVM: amzn-ami-hvm-2018.03.0.20190514-x86_64-gp2
     ap-northeast-1:
       AMZNLINUXHVM: ami-0ccdbc8c1cb7957be
     ap-northeast-2:
@@ -175,70 +223,7 @@ Mappings:
     us-west-1:
       AMZNLINUXHVM: ami-063dd30adbb186909
     us-west-2:
-      ConfigRules: 'true'
-      NatGateway: 'true'
-      Glacier: 'true'
-  AWSAMIRegionMap:
-    AMI:
-      AMZNLINUXHVM: amzn-ami-hvm-2018.03.0.20190611-x86_64-gp2
-    ap-northeast-1:
-      AMZNLINUXHVM: ami-04b2d1589ab1d972c
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ap-northeast-2:
-      AMZNLINUXHVM: ami-0be3e6f84d3b968cd
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ap-south-1:
-      AMZNLINUXHVM: ami-0b99c7725b9484f9e
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ap-southeast-1:
-      AMZNLINUXHVM: ami-0fb6b6f9e81056553
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ap-southeast-2:
-      AMZNLINUXHVM: ami-075caa3491def750b
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    ca-central-1:
-      AMZNLINUXHVM: ami-0a67d15f2858e33cb
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    eu-central-1:
-      AMZNLINUXHVM: ami-026d3b3672c6e7b66
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    eu-west-1:
-      AMZNLINUXHVM: ami-0862aabda3fb488b5
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    eu-west-2:
-      AMZNLINUXHVM: ami-0bdfa1adc3878cd23
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    sa-east-1:
-      AMZNLINUXHVM: ami-0bb96001cf2299257
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m3.large
-    us-east-1:
-      AMZNLINUXHVM: ami-035b3c7efe6d061d5
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    us-east-2:
-      AMZNLINUXHVM: ami-02f706d959cedf892
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    us-gov-west-1:
-      NatGateway: 'true'
-    us-west-1:
-      AMZNLINUXHVM: ami-0fcdcdb074d2bac5f
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
-    us-west-2:
-      AMZNLINUXHVM: ami-0f2176987ee50226e
-      InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
+      AMZNLINUXHVM: ami-90238490234
 Conditions:
   GovCloudCondition:
     !Equals
@@ -371,8 +356,8 @@ Resources:
             - s3
       TimeoutInMinutes: 20
       Parameters:
-        pRegionAZ1Name: !Ref pAvailabilityZoneA
-        pRegionAZ2Name: !Ref pAvailabilityZoneB
+        pRegionAZ1Name: !Ref AvailabilityZoneA
+        pRegionAZ2Name: !Ref AvailabilityZoneB
         pProductionVPCName: Production VPC
         pBastionSSHCIDR: 0.0.0.0/0
         pDMZSubnetACIDR: 10.100.10.0/24
@@ -382,8 +367,8 @@ Resources:
         pAppPrivateSubnetBCIDR: 10.100.119.0/21
         pDBPrivateSubnetACIDR: 10.100.194.0/21
         pDBPrivateSubnetBCIDR: 10.100.212.0/21
-        pVPCTenancy: !Ref pVPCTenancy
-        pEC2KeyPair: !Ref pEC2KeyPair
+        pVPCTenancy: !Ref VPCTenancy
+        pEC2KeyPair: !Ref EC2KeyPair
         pSupportsNatGateway:
           !FindInMap
           - RegionServiceSupport
@@ -396,7 +381,7 @@ Resources:
           - AMZNLINUXHVM
         pNatInstanceType:
           !FindInMap
-          - AWSAMIRegionMap
+          - InstanceType
           - !Ref AWS::Region
           - InstanceType
         QSS3BucketName: !Ref QSS3BucketName
@@ -435,26 +420,22 @@ Resources:
         pManagementPrivateSubnetACIDR: 10.10.20.0/24
         pManagementPrivateSubnetBCIDR: 10.10.30.0/24
         pManagementVPCName: Management VPC
-        pEC2KeyPairBastion: !Ref pEC2KeyPairBastion
-        pEC2KeyPair: !Ref pEC2KeyPair
-        pVPCTenancy: !Ref pVPCTenancy
+        pEC2KeyPairBastion: !Ref EC2KeyPairBastion
+        pEC2KeyPair: !Ref EC2KeyPair
+        pVPCTenancy: !Ref VPCTenancy
         pBastionAmi:
           !FindInMap
           - AWSAMIRegionMap
           - !Ref AWS::Region
           - AMZNLINUXHVM
-        pRegionAZ1Name: !Ref pAvailabilityZoneA
-        pRegionAZ2Name: !Ref pAvailabilityZoneB
+        pRegionAZ1Name: !Ref AvailabilityZoneA
+        pRegionAZ2Name: !Ref AvailabilityZoneB
         pBastionInstanceType:
           !If
           - LaunchAsDedicatedInstance
           - m4.large
           - t2.small
-        pSupportsNatGateway:
-          !FindInMap
-          - RegionServiceSupport
-          - !Ref AWS::Region
-          - NatGateway
+        pSupportsNatGateway: 'true'
         pNatAmi:
           !FindInMap
           - AWSAMIRegionMap
@@ -462,7 +443,7 @@ Resources:
           - AMZNLINUXHVM
         pNatInstanceType:
           !FindInMap
-          - AWSAMIRegionMap
+          - InstanceType
           - !Ref AWS::Region
           - InstanceType
         QSS3BucketName: !Ref QSS3BucketName
@@ -497,7 +478,7 @@ Resources:
     Properties:
       TemplateURL:
         !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/application.template
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/application.template.yaml
         - QSS3Region:
             !If
             - GovCloudCondition
@@ -505,79 +486,79 @@ Resources:
             - s3
       TimeoutInMinutes: 30
       Parameters:
-        pSecurityAlarmTopic:
+        SecurityAlarmTopic:
           !GetAtt
           - LoggingTemplate
           - Outputs.rSecurityAlarmTopic
-        pEC2KeyPair: !Ref pEC2KeyPair
-        pProductionCIDR: 10.100.0.0/16
-        pProductionVPC:
+        EC2KeyPair: !Ref EC2KeyPair
+        ProductionCIDR: 10.100.0.0/16
+        ProductionVPC:
           !GetAtt
           - ProductionVpcTemplate
           - Outputs.rVPCProduction
-        pDMZSubnetA:
+        DMZSubnetA:
           !GetAtt
           - ProductionVpcTemplate
           - Outputs.rDMZSubnetA
-        pDMZSubnetB:
+        DMZSubnetB:
           !GetAtt
           - ProductionVpcTemplate
           - Outputs.rDMZSubnetB
-        pAppPrivateSubnetA:
+        AppPrivateSubnetA:
           !GetAtt
           - ProductionVpcTemplate
           - Outputs.rAppPrivateSubnetA
-        pAppPrivateSubnetB:
+        AppPrivateSubnetB:
           !GetAtt
           - ProductionVpcTemplate
           - Outputs.rAppPrivateSubnetB
-        pWebInstanceType:
+        WebInstanceType:
           !FindInMap
-          - AWSAMIRegionMap
+          - InstanceType
           - !Ref AWS::Region
           - InstanceType
-        pAppInstanceType:
+        AppInstanceType:
           !FindInMap
-          - AWSAMIRegionMap
+          - InstanceType
           - !Ref AWS::Region
           - InstanceType
-        pDBPrivateSubnetA:
+        DBPrivateSubnetA:
           !GetAtt
           - ProductionVpcTemplate
           - Outputs.rDBPrivateSubnetA
-        pDBPrivateSubnetB:
+        DBPrivateSubnetB:
           !GetAtt
           - ProductionVpcTemplate
           - Outputs.rDBPrivateSubnetB
-        pManagementCIDR: 10.10.0.0/16
-        pRegionAZ1Name: !Ref pAvailabilityZoneA
-        pRegionAZ2Name: !Ref pAvailabilityZoneB
-        pWebServerAMI:
+        ManagementCIDR: 10.10.0.0/16
+        RegionAZ1Name: !Ref AvailabilityZoneA
+        RegionAZ2Name: !Ref AvailabilityZoneB
+        WebServerAMI:
           !FindInMap
           - AWSAMIRegionMap
           - !Ref AWS::Region
           - AMZNLINUXHVM
-        pAppAmi:
+        AppAmi:
           !FindInMap
           - AWSAMIRegionMap
           - !Ref AWS::Region
           - AMZNLINUXHVM
-        pDBUser: testuserdb
-        pDBName: testDB
-        pDBPassword: !Ref pDBPassword
-        pDBClass:
+        DBUser: testuserdb
+        DBName: testDB
+        DBPassword: !Ref DBPassword
+        DBClass:
           !FindInMap
-          - AWSAMIRegionMap
+          - InstanceType
           - !Ref AWS::Region
           - InstanceTypeDatabase
-        pDBAllocatedStorage: '10'
-        pEnvironment:
+        DBAllocatedStorage: '10'
+        Environment:
           !FindInMap
           - CustomVariables
           - vResourceEnvironmentTagValue
           - Value
-        pBastionSSHCIDR: 0.0.0.0/0
-        pSupportsGlacier:
+        BastionSSHCIDR: 0.0.0.0/0
+        SupportsGlacier:
           !FindInMap
           - RegionServiceSupport
           - !Ref AWS::Region

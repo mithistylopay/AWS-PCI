@@ -1,30 +1,24 @@
 # Centralized Logging Solution
-
 AWSTemplateFormatVersion: 2010-09-09
-
 Description: (SO0009) - AWS Centralized Logging Solution, primary template
-
 Parameters:
   # Name for ES Domain
   DOMAINNAME:
     Description: Name for the Amazon ES domain that this template will create. Domain names must start with a lowercase letter and must be between 3 and 28 characters. Valid characters are a-z (lowercase only), 0-9.
     Type: String
     Default: pcicentralizedlogging
-
   # Email address for the Elasticsearch domain admin
   DomainAdminEmail:
     Type: String
     Default: esdomainadmin@example.com
     AllowedPattern: '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
     Description: E-mail address of the Elasticsearch admin and for Alerts
-
   # Email address for Cognito Admin user
   CognitoAdminEmail:
     Type: String
     Default: cognitoadmin@example.com
     AllowedPattern: '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
     Description: E-mail address of the Cognito admin
-
   # ES cluster size
   ClusterSize:
     Description: Amazon ES cluster size; small (4 data nodes), medium (6 data nodes), large (8 data nodes), xLarge (10 data nodes)
@@ -35,37 +29,31 @@ Parameters:
     - Medium
     - Large
     - xLarge
-
-  #S3 bucket
-
-  rBucketName:
+  BucketName:
     Description: This will create a new S3 Bucket for logging CloudTrail events. Name must be a globally unique value and must be in lowercase.
     Type: String
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
-
   #Additional accounts which would use the same ES
   ProdAccount:
     Description: "Additional account ID which you want to allow for centralized logging (ex: Production). Leave blank if none."
     Type: String
     AllowedPattern: "(|\\d{12})"
     ConstraintDescription: AWS accounts are 12 digits long. Enter 12 digits or leave blank.
-
   TestAccount:
     Description: "Additional account ID which you want to allow for centralized logging (ex: Test). Leave blank if none."
     Type: String
     AllowedPattern: "(|\\d{12})"
     ConstraintDescription: AWS accounts are 12 digits long. Enter 12 digits or leave blank.
-
   DevAccount:
     Description: "Additional account ID which you want to allow for centralized logging (ex: Development). Leave blank if none."
     Type: String
     AllowedPattern: "(|\\d{12})"
     ConstraintDescription: AWS accounts are 12 digits long. Enter 12 digits or leave blank.
-  tpRequiredTagKey:
+  RequiredTagKey:
     Description: Tag key to check for with EC2/EBS REQUIRED_TAGS rule (optional, leave
       blank to ignore or if you are not deploying config)
     Type: String
-  pDeployConfigRule:
+  DeployConfigRule:
     Type: String
     Description: Do you want to deploy AWS Config and did you setup a configuration recorder in the pre deployment steps?
     AllowedValues:
@@ -121,7 +109,6 @@ Metadata:
       Parameters:
       - pDeployConfigRule
       - tpRequiredTagKey
-
     ParameterLabels:
       CognitoAdminEmail:
         default: Cognito Admin email address
@@ -131,7 +118,7 @@ Metadata:
         default: Elasticsearch Domain name
       ClusterSize:
         default: Cluster Size
-      rBucketName:
+      BucketName:
         default: S3 Bucket Name for CloudTrail logging
       ProdAccount:
         default: Additional Log Account
@@ -139,48 +126,39 @@ Metadata:
         default: Additional Log Account
       DevAccount:
         default: Additional Log Account
-      pDeployConfigRule:
+      DeployConfigRule:
         default: Deploy AWS Config
-      tpRequiredTagKey:
+      RequiredTagKey:
         default: Required Tag Key
       QSS3BucketName:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
         default: Quick Start S3 Key Prefix
-
 Mappings:
   InstanceMap:
     send-data: {"SendAnonymousData": "Yes"}
-
-  # V57271571 - 10/09/2018 - update tshirt size
-  #added xLarge 6/25/2019
   InstanceSizing:
     elasticsearch:
       Small: i3.large.elasticsearch
       Medium: i3.2xlarge.elasticsearch
       Large: i3.4xlarge.elasticsearch
       xLarge: i3.16xlarge.elasticsearch
-#Default
   MasterSizing:
     elasticsearch:
       Small: r5.large.elasticsearch
       Medium: r5.large.elasticsearch
       Large: r5.large.elasticsearch
       xLarge: r5.large.elasticsearch
-
   NodeCount:
     elasticsearch:
       Small: '4'
       Medium: '6'
       Large: '8'
       xLarge: '10'
-
-  # Lambda source code mapping
   SourceCode:
     General:
       S3Bucket: "solutions"
       KeyPrefix: "centralized-logging/v3.0.0"
-
   RegionServiceSupport:
     ap-northeast-1:
       Glacier: 'GLACIER'
@@ -212,18 +190,15 @@ Mappings:
       Glacier: 'GLACIER'
     us-west-2:
       Glacier: 'GLACIER'
-
-#Setting to False if no user input
 Conditions:
-  cProdAccount: !Equals [!Ref ProdAccount, ""]
-  cTestAccount: !Equals [!Ref TestAccount, ""]
-  cDevAccount: !Equals [!Ref DevAccount, ""]
-  cDeployConfigRule: !Equals [ !Ref pDeployConfigRule, Yes Config ]
+  ProdAccount: !Equals [!Ref ProdAccount, ""]
+  TestAccount: !Equals [!Ref TestAccount, ""]
+  DevAccount: !Equals [!Ref DevAccount, ""]
+  DeployConfigRule: !Equals [ !Ref pDeployConfigRule, Yes Config ]
   GovCloudCondition:
     !Equals
     - !Ref AWS::Region
     - us-gov-west-1
-
 Resources:
   ConfigTemplate:
     Condition: cDeployConfigRule
@@ -239,8 +214,7 @@ Resources:
             - s3
       TimeoutInMinutes: 20
       Parameters:
-        pRequiredTagKey: !Ref tpRequiredTagKey
-
+        RequiredTagKey: !Ref tpRequiredTagKey
   UserPool:
     DeletionPolicy: Retain
     Type: 'AWS::Cognito::UserPool'
@@ -259,11 +233,9 @@ Resources:
           TemporaryPasswordValidityDays: 90
       #lockout policy is part of Cognito PCI Compliance
       MfaConfiguration: 'OPTIONAL'
-      #SmsAuthenticationMessage: 1234567
       SmsConfiguration:
         ExternalId: !Sub ${DOMAINNAME}_kibana_access-external
         SnsCallerArn: !GetAtt SNSRole.Arn
-      #SmsVerificationMessage: 1234567
       EmailVerificationSubject: !Ref AWS::StackName
       Schema:
         - Name: name
@@ -278,7 +250,6 @@ Resources:
           AttributeDataType: String
           Mutable: true
           Required: true
-
   # Creates a needed group in Cognito for Kibana access
   UserPoolGroup:
     DeletionPolicy: Retain
@@ -288,7 +259,6 @@ Resources:
       GroupName: !Sub ${DOMAINNAME}_kibana_access_group
       Precedence: 0
       UserPoolId: !Ref UserPool
-
   # Creates a User Pool Client to be used by the identity pool
   UserPoolClient:
     DeletionPolicy: Retain
@@ -297,7 +267,6 @@ Resources:
       ClientName: !Sub ${DOMAINNAME}-client
       GenerateSecret: false
       UserPoolId: !Ref UserPool
-
   # Creates a federated Identity pool
   IdentityPool:
     DeletionPolicy: Retain
@@ -308,7 +277,6 @@ Resources:
       CognitoIdentityProviders:
         - ClientId: !Ref UserPoolClient
           ProviderName: !GetAtt UserPool.ProviderName
-
   # Create a role for unauthorized access to AWS resources. Very limited access.
   # Only allows users in the previously created Identity Pool
   CognitoUnAuthorizedRole:
@@ -391,7 +359,6 @@ Resources:
                   - 'cognito-identity:UnlikeDeveloperIdentity'
                   - 'cognito-identity:UpdateIdentityPool'
                 Resource: !Sub 'arn:aws:cognito-identity:${AWS::Region}:${AWS::AccountId}:identitypool/${IdentityPool}'
-
     # Creates a role that allows Cognito to send SNS messages
   SNSRole:
     Type: "AWS::IAM::Role"
@@ -413,7 +380,6 @@ Resources:
               - Effect: "Allow"
                 Action: "sns:publish"
                 Resource: "*"
-
   CognitoESAccessRole:
     Type: 'AWS::IAM::Role'
     DeletionPolicy: Retain
@@ -428,8 +394,6 @@ Resources:
               Service: 'es.amazonaws.com'
             Action:
               - 'sts:AssumeRole'
-
-  # Assigns the roles to the Identity Pool
   IdentityPoolRoleMapping:
     DeletionPolicy: Retain
     Type: 'AWS::Cognito::IdentityPoolRoleAttachment'
@@ -438,7 +402,6 @@ Resources:
       Roles:
         authenticated: !GetAtt CognitoAuthorizedRole.Arn
         unauthenticated: !GetAtt CognitoUnAuthorizedRole.Arn
-
   AdminUser:
     Type: 'AWS::Cognito::UserPoolUser'
     DeletionPolicy: Retain
@@ -450,8 +413,6 @@ Resources:
           Value: !Ref CognitoAdminEmail
       Username: !Ref CognitoAdminEmail
       UserPoolId: !Ref UserPool
-
-  # Custom resource to configure Cognito and ES
   SetupESCognito:
     Type: 'Custom::SetupESCognito'
     Version: 1.0
@@ -462,7 +423,6 @@ Resources:
       UserPoolId: !Ref UserPool
       IdentityPoolId: !Ref IdentityPool
       RoleArn: !GetAtt CognitoESAccessRole.Arn
-
   LambdaESCognito:
     Type: 'AWS::Lambda::Function'
     Properties:
@@ -477,7 +437,6 @@ Resources:
       Code:
         S3Bucket: !Join ["-", [!FindInMap ["SourceCode", "General", "S3Bucket"], Ref: "AWS::Region"]]
         S3Key: !Join ["/", [!FindInMap ["SourceCode", "General", "KeyPrefix"],  "clog-auth.zip"]]
-
   LambdaESCognitoRole:
     Type: AWS::IAM::Role
     DependsOn: ElasticsearchAWSLogs
@@ -516,11 +475,6 @@ Resources:
             Action:
             - iam:PassRole
             Resource: !GetAtt CognitoESAccessRole.Arn
-
-  #
-  # Primer Elasticsearch resources
-  # [LoggingMasterRole, LoggingMasterPolicies, ElasticsearchAWSLogs]
-  #
   LoggingMasterRole:
     Type: AWS::IAM::Role
     Properties:
@@ -542,7 +496,6 @@ Resources:
           Action:
           - sts:AssumeRole
       Path: "/"
-
   LoggingMasterPolicies:
     Type: AWS::IAM::Policy
     Properties:
@@ -556,7 +509,6 @@ Resources:
           Resource: !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/*
       Roles:
       - !Ref LoggingMasterRole
-
   ElasticsearchAWSLogs:
     Type: AWS::Elasticsearch::Domain
     DeletionPolicy: Retain
@@ -597,15 +549,9 @@ Resources:
               - { AuthRole: !Ref CognitoAuthorizedRole }
           Effect: Allow
           Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DOMAINNAME}/*'
-      # V57095985 - 10/08/2018 - ES Domain needed configurations
-      # https://github.com/awslabs/aws-centralized-logging/issues/2
       AdvancedOptions:
         rest.action.multi.allow_explicit_index: 'true'
         indices.fielddata.cache.size: 40
-
-  #
-  # SNS Topic
-  #
   Topic:
     Type: 'AWS::SNS::Topic'
     Properties:
@@ -613,7 +559,6 @@ Resources:
       Subscription:
       - Endpoint: !Ref DomainAdminEmail
         Protocol: email
-
   TopicPolicy:
     Type: 'AWS::SNS::TopicPolicy'
     Properties:
@@ -629,7 +574,6 @@ Resources:
           Resource: '*'
       Topics:
       - !Ref Topic
-
   TopicEndpointSubscription:
     DependsOn: TopicPolicy
     Type: 'AWS::SNS::Subscription'
@@ -637,11 +581,6 @@ Resources:
       Endpoint: !Ref DomainAdminEmail
       Protocol: email
       TopicArn: !Ref Topic
-
-  #
-  # CloudWatch Alarms
-  #
-
   StatusYellowAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -663,7 +602,6 @@ Resources:
       Period: 60
       Statistic: Maximum
       Threshold: 1
-
   StatusRedAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -685,7 +623,6 @@ Resources:
       Period: 60
       Statistic: Maximum
       Threshold: 1
-
   CPUUtilizationTooHighAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -707,7 +644,6 @@ Resources:
       Period: 900
       Statistic: Average
       Threshold: 80
-
   MasterCPUUtilizationTooHighAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -729,7 +665,6 @@ Resources:
       Period: 900
       Statistic: Average
       Threshold: 50
-
   FreeStorageSpaceTooLowAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -751,7 +686,6 @@ Resources:
       Period: 60
       Statistic: Minimum
       Threshold: 2000
-
   IndexWritesBlockedTooHighAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -773,7 +707,6 @@ Resources:
       Period: 300
       Statistic: Maximum
       Threshold: 1
-
   JVMMemoryPressureTooHighAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -795,7 +728,6 @@ Resources:
       Period: 900
       Statistic: Average
       Threshold: 80
-
   MasterJVMMemoryPressureTooHighAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -817,7 +749,6 @@ Resources:
       Period: 900
       Statistic: Average
       Threshold: 50
-
   MasterNotReachableFromNodeAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -839,7 +770,6 @@ Resources:
       Period: 60
       Statistic: Minimum
       Threshold: 1
-
   AutomatedSnapshotFailureTooHighAlarm:
     DependsOn: TopicEndpointSubscription
     Type: 'AWS::CloudWatch::Alarm'
@@ -861,8 +791,7 @@ Resources:
       Period: 60
       Statistic: Maximum
       Threshold: 1
-
-  rS3BucketPolicy:
+  S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
       Bucket: !Ref rBucketName
@@ -911,13 +840,12 @@ Resources:
           Condition:
             StringEquals:
               s3:x-amz-acl: bucket-owner-full-control
-
-  rCloudWatchLogGroup:
+  CloudWatchLogGroup:
     Type: "AWS::Logs::LogGroup"
     Properties:
       LogGroupName: CentralCloudWatchLogGroupPCI
       RetentionInDays: 365
-  rCloudWatchLogsRole:
+  CloudWatchLogsRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -945,7 +873,7 @@ Resources:
                 Effect: "Allow"
                 Action: "logs:PutLogEvents"
                 Resource: !Join [ '', [ !GetAtt rCloudWatchLogGroup.Arn, '*' ] ]
-  rCloudTrailTrail:
+  CloudTrailTrail:
     Type: "AWS::CloudTrail::Trail"
     DependsOn:
       - rS3BucketPolicy
@@ -1012,7 +940,6 @@ Resources:
         S3Key: "index.zip"
       Runtime: nodejs8.10
       Timeout: 300
-
   LogStreamerInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -1020,14 +947,11 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: !Sub logs.${AWS::Region}.amazonaws.com
       SourceAccount: !Sub ${AWS::AccountId}
-
-
   CreateUniqueID:
     Type: Custom::LoadLambda
     Properties:
       ServiceToken: !GetAtt LambdaESCognito.Arn
       Resource: UUID
-
   CentralLoggingBucket:
     Type: "AWS::S3::Bucket"
     Properties:
@@ -1061,9 +985,7 @@ Resources:
       LogGroupName: CentralCloudWatchLogGroupPCI
       FilterPattern: ''
       DestinationArn: !Sub ${LogStreamer.Arn}
-
-
-  rIAMPolicyChangesMetricFilter:
+  IAMPolicyChangesMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref rCloudWatchLogGroup
@@ -1090,7 +1012,7 @@ Resources:
       - MetricNamespace: CloudTrailMetrics
         MetricName: IAMPolicyEventCount
         MetricValue: 1
-  rNetworkAclChangesMetricFilter:
+  NetworkAclChangesMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref rCloudWatchLogGroup
@@ -1107,7 +1029,7 @@ Resources:
       - MetricNamespace: CloudTrailMetrics
         MetricName: NetworkAclEventCount
         MetricValue: 1
-  rNetworkAclChangesAlarm:
+  NetworkAclChangesAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn: TopicEndpointSubscription
     Properties:
@@ -1124,7 +1046,7 @@ Resources:
       Threshold: 1
       OKActions:
       - !Ref Topic
-  rSecurityGroupChangesMetricFilter:
+  SecurityGroupChangesMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref rCloudWatchLogGroup
@@ -1141,7 +1063,7 @@ Resources:
       - MetricNamespace: CloudTrailMetrics
         MetricName: SecurityGroupEventCount
         MetricValue: 1
-  rSecurityGroupChangesAlarm:
+  SecurityGroupChangesAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - rNetworkAclChangesAlarm
@@ -1160,7 +1082,7 @@ Resources:
       Threshold: 1
       OKActions:
       - !Ref Topic
-  rIAMRootActivity:
+  IAMRootActivity:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref rCloudWatchLogGroup
@@ -1174,7 +1096,7 @@ Resources:
       - MetricNamespace: CloudTrailMetrics
         MetricName: RootUserPolicyEventCount
         MetricValue: 1
-  rRootActivityAlarm:
+  RootActivityAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - rSecurityGroupChangesAlarm
@@ -1192,7 +1114,7 @@ Resources:
       Threshold: 1
       OKActions:
       - !Ref Topic
-  rUnauthorizedAttempts:
+  UnauthorizedAttempts:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref rCloudWatchLogGroup
@@ -1206,7 +1128,7 @@ Resources:
       - MetricNamespace: CloudTrailMetrics
         MetricName: UnauthorizedAttemptCount
         MetricValue: 1
-  rUnauthorizedAttemptAlarm:
+  UnauthorizedAttemptAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - rRootActivityAlarm
@@ -1224,7 +1146,7 @@ Resources:
       Threshold: 5
       OKActions:
       - !Ref Topic
-  rIAMPolicyChangesAlarm:
+  IAMPolicyChangesAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - rUnauthorizedAttemptAlarm
@@ -1242,7 +1164,7 @@ Resources:
       Threshold: 1
       OKActions:
       - !Ref Topic
-  rIAMCreateAccessKeyAlarm:
+  IAMCreateAccessKeyAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - rIAMPolicyChangesAlarm
@@ -1261,7 +1183,7 @@ Resources:
       Threshold: 1
       OKActions:
       - !Ref Topic
-  rIAMCreateAccessKey:
+  IAMCreateAccessKey:
     Type: AWS::Logs::MetricFilter
     DependsOn: rIAMCreateAccessKeyAlarm
     Properties:
@@ -1274,7 +1196,7 @@ Resources:
       - MetricNamespace: CloudTrailMetrics
         MetricName: NewAccessKeyCreated
         MetricValue: 1
-  rCloudTrailChangeAlarm:
+  CloudTrailChangeAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
       - rIAMCreateAccessKeyAlarm
@@ -1293,7 +1215,7 @@ Resources:
       Threshold: 1
       OKActions:
       - !Ref Topic
-  rCloudTrailChange:
+  CloudTrailChange:
     Type: AWS::Logs::MetricFilter
     Properties:
       LogGroupName: !Ref rCloudWatchLogGroup
@@ -1311,28 +1233,22 @@ Resources:
       - MetricNamespace: CloudTrailMetrics
         MetricName: CloudTrailChangeCount
         MetricValue: 1
-        
 Outputs:
   DomainEndpoint:
     Description: ES domain endpoint URL
     Value: !Sub https://${ElasticsearchAWSLogs.DomainEndpoint}
-
   KibanaLoginURL:
     Description: Kibana login URL
     Value: !Sub https://${ElasticsearchAWSLogs.DomainEndpoint}/_plugin/kibana/
-
   MasterRole:
     Description: IAM role for ES cross account access
     Value: !Sub ${LoggingMasterRole.Arn}
-
   LambdaArn:
     Description: Lambda function to index logs on ES Domain
     Value: !Sub ${LogStreamer.Arn}
-
   ClusterSize:
     Description: Cluster size for the deployed ES Domain
     Value: !Sub ${ClusterSize}
-
   CentralLogBucket:
     Description: "Central log bucket"
     Value: !Ref rBucketName

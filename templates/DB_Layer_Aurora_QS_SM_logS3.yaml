@@ -23,71 +23,71 @@ Metadata:
     - Label:
         default: Availability Zone Selection
       Parameters:
-      - pRegionAZ1Name
-      - pRegionAZ2Name
+      - RegionAZ1Name
+      - RegionAZ2Name
     - Label:
         default: Network (existing VPC config)
       Parameters:
-      - pProductionCIDR
-      - pProductionVPC
-      - pDBPrivateSubnetA
-      - pDBPrivateSubnetB
+      - ProductionCIDR
+      - ProductionVPC
+      - DBPrivateSubnetA
+      - DBPrivateSubnetB
     - Label:
         default: Database Configuration
       Parameters:
-      - pDBName
-      - pDBUser
+      - DBName
+      - DBUser
       - KMSalias
     ParameterLabels:
-      pRegionAZ1Name:
+      RegionAZ1Name:
         default: Choose 1 of 2 Availability Zones to Deploy Aurora
-      pRegionAZ2Name:
+      RegionAZ2Name:
         default: Choose 2 of 2 Availability Zones to Deploy Aurora
-      pProductionCIDR:
+      ProductionCIDR:
         default: Ingress to Aurora Database
-      pProductionVPC:
+      ProductionVPC:
         default: VPC to Deploy Aurora Database
-      pDBPrivateSubnetA:
+      DBPrivateSubnetA:
         default: Choose 1 of 2 Subnets to Create a Subnet Group for Aurora
-      pDBPrivateSubnetB:
+      DBPrivateSubnetB:
         default: Choose 2 of 2 Subnets to Create a Subnet Group for Aurora
-      pDBName:
+      DBName:
         default: Aurora Database Name
-      pDBUser:
+      DBUser:
         default: Aurora Database User
       KMSalias:
         default: CMK Alias
 
 Parameters:
-  pProductionCIDR:
+  ProductionCIDR:
     Description: CIDR Range to allow ingress into Database
     Type: String
     Default: 10.100.0.0/16
-  pProductionVPC:
+  ProductionVPC:
     Description: Production VPC
     Type: AWS::EC2::VPC::Id
-  pDBPrivateSubnetA:
+  DBPrivateSubnetA:
     Description: Database Private Subnet A
     Type: AWS::EC2::Subnet::Id
-  pDBPrivateSubnetB:
+  DBPrivateSubnetB:
     Description: Database Private Subnet B
     Type: AWS::EC2::Subnet::Id
-  pRegionAZ1Name:
+  RegionAZ1Name:
     Description: AvailabilityZone 1
     Type: AWS::EC2::AvailabilityZone::Name
-  pRegionAZ2Name:
+  RegionAZ2Name:
     Description: AvailabilityZone 2
     Type: AWS::EC2::AvailabilityZone::Name
-  pDBName:
+  DBName:
     Description: Name of RDS Database
     Type: String
-  pDBUser:
+  DBUser:
     Description: Username of DB Instance
     Type: String
   KMSalias:
     Description: An alias is a display name for a customer master key (CMK)
     Type: String
-  pCentralLogBucket:
+  CentralLogBucket:
     Type: String
     Description: The Amazon S3 bucket to send Amazon Aurora audit logs
     Default: ''
