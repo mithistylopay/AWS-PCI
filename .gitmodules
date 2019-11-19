@@ -2,3 +2,6 @@
 	path = submodules/quickstart-compliance-common
 	url = git@github.com:aws-quickstart/quickstart-compliance-common.git
 	branch = master
+[submodule "submodules/quickstart-amazon-aurora-mysql"]
+	path = submodules/quickstart-amazon-aurora-mysql
+	url = https://github.com/aws-quickstart/quickstart-amazon-aurora-mysql.git
