@@ -20,11 +20,12 @@ Metadata:
     - Label:
         default: Region Config
       Parameters:
-      - AvailabiltiyZoneA
+      - AvailabilityZoneA
       - AvailabilityZoneB
     - Label:
         default: Network (existing VPC config)
       Parameters:
+      - ManagementCIDR
       - ProductionCIDR
       - ProductionVPC
       - DMZSubnetA
@@ -36,6 +37,25 @@ Metadata:
       Parameters:
       - QSS3BucketName
       - QSS3KeyPrefix
+    - Label:
+        default: Database Configuration
+      Parameters:
+      - DBName
+      - DBUser
+      - DBPassword
+    - Label:
+        default: Logging configuration
+      Parameters:
+        - CentralLogBucket
+        - WAFLogging
+    - Label:
+        default: ElasticSearch Configuration
+      Parameters:
+        - ESClusterARN
+    - Label:
+        default: EC2 Configuration
+      Parameters:
+        - EC2KeyPair
     ParameterLabels:
       ProductionCIDR:
         default: CIDR Range of VPC
@@ -60,9 +80,13 @@ Metadata:
       ManagementCIDR:
         default: CIDR Range or IP to Allow Access to the Web/Application Servers
       CentralLogBucket:
-        default: Centalized Logging Bucket to Store AWS WAF Logs
+        default: Centralized Logging Bucket to Store AWS WAF Logs
       WAFlogging:
         default: Choose to Send Logs to Amazon S3 or Amazon S3 and Amazon ElasticSearch
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
 Parameters:
   WAFlogging:
     Type: String
@@ -87,7 +111,9 @@ Parameters:
     Description: Production VPC CIDR
     Type: String
     Default: 10.100.0.0/16
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
   ManagementCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
     Description: Management VPC CIDR
     Type: String
     Default: 10.10.0.0/16
@@ -307,7 +333,6 @@ Resources:
     DeletionPolicy: Delete
   WebContentS3Policy:
     Type: AWS::S3::BucketPolicy
-    DependsOn: WebContentBucket
     Properties:
       Bucket: !Ref WebContentBucket
       PolicyDocument:
@@ -344,8 +369,6 @@ Resources:
               s3:x-amz-server-side-encryption: AES256
   ELBApp:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    DependsOn:
-    - SecurityGroupApp
     Properties:
       Subnets:
       - !Ref AppPrivateSubnetA
@@ -374,8 +397,6 @@ Resources:
     LoadBalancerArn: !Ref ELBApp
   ELBWeb:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    DependsOn:
-    - SecurityGroupWeb
     Properties:
       Subnets:
       - !Ref DMZSubnetA
@@ -485,10 +506,10 @@ Resources:
            - AWSAMIRegionMap
            - !Ref AWS::Region
            - AMZNLINUXHVM
-      IamInstanceProfile: !Ref rWebInstanceProfile
+      IamInstanceProfile: !Ref WebInstanceProfile
       InstanceType:
         !FindInMap
-           - AWSAMIRegionMap
+           - Instances
            - !Ref AWS::Region
            - InstanceType
       BlockDeviceMappings:
@@ -553,7 +574,6 @@ Resources:
       Name: WebTGroup
   AutoScalingGroupWeb:
     Type: AWS::AutoScaling::AutoScalingGroup
-    DependsOn: AutoScalingConfigWeb
     Properties:
       AvailabilityZones:
       - !Ref AvailabilityZoneA
@@ -655,7 +675,7 @@ Resources:
             /var/www/html: https://wordpress.org/latest.tar.gz
           files:
             /var/www/html/wordpress/wp-config.php:
-              content: !Sub |
+              content: |
                 <?php
                 /**
                  * The base configuration for WordPress
@@ -715,7 +735,7 @@ Resources:
                  *
                  * @link https://codex.wordpress.org/Debugging_in_WordPress
                  */
-                define( 'WP_DEBUG', true );
+                define('WP_DEBUG', false );
                 define('WP_ALLOW_REPAIR', true);
 
                 /* That's all, stop editing! Happy publishing. */
@@ -745,7 +765,7 @@ Resources:
       IamInstanceProfile: !Ref AppInstanceProfile
       InstanceType:
         !FindInMap
-           - AWSAMIRegionMap
+           - Instances
            - !Ref AWS::Region
            - InstanceType
       BlockDeviceMappings:
@@ -758,9 +778,7 @@ Resources:
       SecurityGroups:
       - !Ref SecurityGroupAppInstance
       UserData:
-        Fn::Base64:
-          !Sub
-          - |
+        Fn::Base64: |
             #!/bin/bash -x
 
             yum update -y
@@ -827,11 +845,6 @@ Resources:
 
             # Inject the security control matrix file location.
             sudo sed -i "s|{compliance-body-matrix}|https://cloudformationlctemplates.s3.amazonaws.com/$COMPLIANCE_MATRIX_FILENAME|g" $LANDING_PAGE
-          - QSS3Region:
-              !If
-              - GovCloudCondition
-              - s3-us-gov-west-1
-              - s3
   AppTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
@@ -842,7 +855,6 @@ Resources:
       Name: AppTGroup
   AutoScalingGroupApp:
     Type: AWS::AutoScaling::AutoScalingGroup
-    DependsOn: AutoScalingConfigApp
     Properties:
       AvailabilityZones:
       - !Ref AvailabilityZoneA
@@ -861,7 +873,6 @@ Resources:
       - Key: Name
         Value: AppServer
         PropagateAtLaunch: true
-        PropagateAtLaunch: true
   AutoScalingDownApp:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
@@ -878,10 +889,8 @@ Resources:
       ScalingAdjustment: -1
   WAFtemplateOWASP:
     Type: AWS::CloudFormation::Stack
-    DependsOn:
-      - ELBWeb
     Properties:
-      TemplateURL: !Sub "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/waf_owasp.template.yaml
+      TemplateURL: !Sub "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/waf_owasp.template.yaml"
       TimeoutInMinutes: 20
       Parameters:
         ELBWeb: !Ref ELBWeb
@@ -907,30 +916,30 @@ Resources:
         PolicyDocument:
           Version: 2012-10-17
           Statement:
-          - Sid: UploadServerCertificate
-            Effect: Allow
-            Action:
-            - iam:ListServerCertificates
-            - iam:UploadServerCertificate
-            - iam:CreateServiceLinkedRole
-            Resource: "*"
-          - Sid: CreateLoadBalancerListener
-            Effect: Allow
-            Action:
-            - elasticloadbalancing:*
-            Resource: "*"
-          - Sid: SelfDestruct
-            Effect: Allow
-            Action:
-            - ec2:TerminateInstances
-            Resource: "*"
-          - Sid: WAFListACL
-            Effect: Allow
-            Action:
-            - waf-regional:ListWebACLs
-            - waf-regional:ListLoggingConfigurations
-            - waf-regional:PutLoggingConfiguration
-            Resource: "*"
+            - Sid: UploadServerCertificate
+              Effect: Allow
+              Action:
+                - iam:ListServerCertificates
+                - iam:UploadServerCertificate
+                - iam:CreateServiceLinkedRole
+              Resource: "*"
+            - Sid: CreateLoadBalancerListener
+              Effect: Allow
+              Action:
+                - elasticloadbalancing:*
+              Resource: "*"
+            - Sid: SelfDestruct
+              Effect: Allow
+              Action:
+                - ec2:TerminateInstances
+              Resource: "*"
+            - Sid: WAFListACL
+              Effect: Allow
+              Action:
+                - waf-regional:ListWebACLs
+                - waf-regional:ListLoggingConfigurations
+                - waf-regional:PutLoggingConfiguration
+              Resource: "*"
   PostProcInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -950,7 +959,7 @@ Resources:
            - AMZNLINUXHVM
       InstanceType:
         !FindInMap
-           - AWSAMIRegionMap
+           - Instances
            - !Ref AWS::Region
            - InstanceType
       IamInstanceProfile: !Ref PostProcInstanceProfile
@@ -1021,7 +1030,7 @@ Outputs:
     Value: !Ref ELBWeb
   SurveyLink:
     Description: Please take a moment to complete the survey by clicking this link
-    Value: https://aws.au1.qualtrics.com/SE/?SID=SV_55sYYdtY1NhTTgN&qs=${COMPLIANCE_SURVEY_LINK}
+    Value: https://aws.au1.qualtrics.com/SE/?SID=SV_55sYYdtY1NhTTgN&qs=pci
   Help:
     Description: For assistance or questions regarding this quickstart please email
       compliance-accelerator@amazon.com

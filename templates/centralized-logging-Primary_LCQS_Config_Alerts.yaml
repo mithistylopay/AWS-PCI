@@ -47,7 +47,7 @@ Parameters:
   DevAccount:
     Description: "Additional account ID which you want to allow for centralized logging (ex: Development). Leave blank if none."
     Type: String
-    AllowedPattern: "(|\\d{12})"
+    AllowedPattern: "(|\\d{12}I5)"
     ConstraintDescription: AWS accounts are 12 digits long. Enter 12 digits or leave blank.
   RequiredTagKey:
     Description: Tag key to check for with EC2/EBS REQUIRED_TAGS rule (optional, leave
@@ -194,14 +194,14 @@ Conditions:
   ProdAccount: !Equals [!Ref ProdAccount, ""]
   TestAccount: !Equals [!Ref TestAccount, ""]
   DevAccount: !Equals [!Ref DevAccount, ""]
-  DeployConfigRule: !Equals [ !Ref pDeployConfigRule, Yes Config ]
+  DeployConfigRule: !Equals [ !Ref DeployConfigRule, Yes Config ]
   GovCloudCondition:
     !Equals
     - !Ref AWS::Region
     - us-gov-west-1
 Resources:
   ConfigTemplate:
-    Condition: cDeployConfigRule
+    Condition: DeployConfigRule
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL:
@@ -214,7 +214,7 @@ Resources:
             - s3
       TimeoutInMinutes: 20
       Parameters:
-        RequiredTagKey: !Ref tpRequiredTagKey
+        RequiredTagKey: !Ref RequiredTagKey
   UserPool:
     DeletionPolicy: Retain
     Type: 'AWS::Cognito::UserPool'
@@ -485,9 +485,9 @@ Resources:
           Principal:
             AWS:
               - Ref: AWS::AccountId
-              - !If [cProdAccount, !Ref "AWS::AccountId", !Ref ProdAccount]
-              - !If [cTestAccount, !Ref "AWS::AccountId", !Ref TestAccount]
-              - !If [cDevAccount, !Ref "AWS::AccountId", !Ref DevAccount]
+              - !If [ProdAccount, !Ref "AWS::AccountId", !Ref ProdAccount]
+              - !If [TestAccount, !Ref "AWS::AccountId", !Ref TestAccount]
+              - !If [DevAccount, !Ref "AWS::AccountId", !Ref DevAccount]
               #Fn::If:
               #  - SingleAccnt
               #  - Ref: AWS::AccountId
@@ -514,7 +514,7 @@ Resources:
     DeletionPolicy: Retain
     Properties:
       DomainName: !Ref DOMAINNAME
-      ElasticsearchVersion: 6.7
+      ElasticsearchVersion: '6.7'
       EncryptionAtRestOptions:
         Enabled: true
       ElasticsearchClusterConfig:
@@ -525,16 +525,16 @@ Resources:
         DedicatedMasterType: !FindInMap [MasterSizing, elasticsearch, !Ref ClusterSize]
         DedicatedMasterCount: 3
       SnapshotOptions:
-        AutomatedSnapshotStartHour: '1'
+        AutomatedSnapshotStartHour: 1
       AccessPolicies:
         Version: 2012-10-17
         Statement:
         - Action: 'es:ESHttpPost'
           Principal:
             AWS:
-              - !If [cProdAccount, !Ref "AWS::AccountId", !Ref ProdAccount]
-              - !If [cTestAccount, !Ref "AWS::AccountId", !Ref TestAccount]
-              - !If [cDevAccount, !Ref "AWS::AccountId", !Ref DevAccount]
+              - !If [ProdAccount, !Ref "AWS::AccountId", !Ref ProdAccount]
+              - !If [TestAccount, !Ref "AWS::AccountId", !Ref TestAccount]
+              - !If [DevAccount, !Ref "AWS::AccountId", !Ref DevAccount]
           Effect: Allow
           Resource: !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/*
         - Action: 'es:*'
@@ -551,7 +551,7 @@ Resources:
           Resource: !Sub 'arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DOMAINNAME}/*'
       AdvancedOptions:
         rest.action.multi.allow_explicit_index: 'true'
-        indices.fielddata.cache.size: 40
+        indices.fielddata.cache.size: '40'
   Topic:
     Type: 'AWS::SNS::Topic'
     Properties:
@@ -794,7 +794,7 @@ Resources:
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref rBucketName
+      Bucket: !Ref BucketName
       PolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -802,7 +802,7 @@ Resources:
           Principal:
             Service: cloudtrail.amazonaws.com
           Action: s3:GetBucketAcl
-          Resource: !Sub arn:aws:s3:::${rBucketName}
+          Resource: !Sub arn:aws:s3:::${BucketName}
         - Effect: Allow
           Principal:
             Service: cloudtrail.amazonaws.com
@@ -811,31 +811,31 @@ Resources:
               - Fn::Join:
                 - ''
                 - - 'arn:aws:s3:::'
-                  - Ref: rBucketName
+                  - Ref: BucketName
                   - "/AWSLogs/"
                   - Ref: AWS::AccountId
                   - "/*"
               - Fn::Join:
                 - ''
                 - - 'arn:aws:s3:::'
-                  - Ref: rBucketName
+                  - Ref: BucketName
                   - "/AWSLogs/"
                   # Not sure if this is the best way, but use current account  if not additional accounts not specified.
-                  - !If [cProdAccount, !Ref "AWS::AccountId", !Ref ProdAccount]
+                  - !If [ProdAccount, !Ref "AWS::AccountId", !Ref ProdAccount]
                   - "/*"
               - Fn::Join:
                 - ''
                 - - 'arn:aws:s3:::'
-                  - Ref: rBucketName
+                  - Ref: BucketName
                   - "/AWSLogs/"
-                  - !If [cTestAccount, !Ref "AWS::AccountId", !Ref TestAccount]
+                  - !If [TestAccount, !Ref "AWS::AccountId", !Ref TestAccount]
                   - "/*"
               - Fn::Join:
                 - ''
                 - - 'arn:aws:s3:::'
-                  - Ref: rBucketName
+                  - Ref: BucketName
                   - "/AWSLogs/"
-                  - !If [cDevAccount, !Ref "AWS::AccountId", !Ref DevAccount]
+                  - !If [DevAccount, !Ref "AWS::AccountId", !Ref DevAccount]
                   - "/*"
           Condition:
             StringEquals:
@@ -868,24 +868,23 @@ Resources:
               -
                 Effect: "Allow"
                 Action: "logs:CreateLogStream"
-                Resource: !Join [ '', [ !GetAtt rCloudWatchLogGroup.Arn, '*' ] ]
+                Resource: !Join [ '', [ !GetAtt CloudWatchLogGroup.Arn, '*' ] ]
               -
                 Effect: "Allow"
                 Action: "logs:PutLogEvents"
-                Resource: !Join [ '', [ !GetAtt rCloudWatchLogGroup.Arn, '*' ] ]
+                Resource: !Join [ '', [ !GetAtt CloudWatchLogGroup.Arn, '*' ] ]
   CloudTrailTrail:
     Type: "AWS::CloudTrail::Trail"
     DependsOn:
-      - rS3BucketPolicy
-      - rCloudWatchLogGroup
+      - S3BucketPolicy
     Properties:
-      CloudWatchLogsLogGroupArn: !GetAtt rCloudWatchLogGroup.Arn
-      CloudWatchLogsRoleArn: !GetAtt rCloudWatchLogsRole.Arn
+      CloudWatchLogsLogGroupArn: !GetAtt CloudWatchLogGroup.Arn
+      CloudWatchLogsRoleArn: !GetAtt CloudWatchLogsRole.Arn
       EnableLogFileValidation: True
       IncludeGlobalServiceEvents: True
       IsLogging: True
       IsMultiRegionTrail: True
-      S3BucketName: !Ref rBucketName
+      S3BucketName: !Ref BucketName
       Tags:
         -
           Key: Name
@@ -955,7 +954,7 @@ Resources:
   CentralLoggingBucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: !Ref rBucketName
+      BucketName: !Ref BucketName
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -979,7 +978,7 @@ Resources:
   SubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     DependsOn:
-      - rCloudWatchLogGroup
+      - CloudWatchLogGroup
       - LogStreamer
     Properties:
       LogGroupName: CentralCloudWatchLogGroupPCI
@@ -988,7 +987,7 @@ Resources:
   IAMPolicyChangesMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
-      LogGroupName: !Ref rCloudWatchLogGroup
+      LogGroupName: !Ref CloudWatchLogGroup
       FilterPattern: |-
         {
           ($.eventName=DeleteGroupPolicy) ||
@@ -1011,11 +1010,11 @@ Resources:
       MetricTransformations:
       - MetricNamespace: CloudTrailMetrics
         MetricName: IAMPolicyEventCount
-        MetricValue: 1
+        MetricValue: '1'
   NetworkAclChangesMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
-      LogGroupName: !Ref rCloudWatchLogGroup
+      LogGroupName: !Ref CloudWatchLogGroup
       FilterPattern: |-
         {
           ($.eventName = CreateNetworkAcl) ||
@@ -1028,7 +1027,7 @@ Resources:
       MetricTransformations:
       - MetricNamespace: CloudTrailMetrics
         MetricName: NetworkAclEventCount
-        MetricValue: 1
+        MetricValue: '1'
   NetworkAclChangesAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn: TopicEndpointSubscription
@@ -1049,7 +1048,7 @@ Resources:
   SecurityGroupChangesMetricFilter:
     Type: AWS::Logs::MetricFilter
     Properties:
-      LogGroupName: !Ref rCloudWatchLogGroup
+      LogGroupName: !Ref CloudWatchLogGroup
       FilterPattern: |-
         {
           ($.eventName = AuthorizeSecurityGroupIngress) ||
@@ -1062,11 +1061,11 @@ Resources:
       MetricTransformations:
       - MetricNamespace: CloudTrailMetrics
         MetricName: SecurityGroupEventCount
-        MetricValue: 1
+        MetricValue: '1'
   SecurityGroupChangesAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
-      - rNetworkAclChangesAlarm
+      - NetworkAclChangesAlarm
       - TopicEndpointSubscription
     Properties:
       AlarmDescription: Alarms when an API call is made to create, update or delete
@@ -1085,7 +1084,7 @@ Resources:
   IAMRootActivity:
     Type: AWS::Logs::MetricFilter
     Properties:
-      LogGroupName: !Ref rCloudWatchLogGroup
+      LogGroupName: !Ref CloudWatchLogGroup
       FilterPattern: |-
         {
           ($.userIdentity.type = "Root") &&
@@ -1095,11 +1094,11 @@ Resources:
       MetricTransformations:
       - MetricNamespace: CloudTrailMetrics
         MetricName: RootUserPolicyEventCount
-        MetricValue: 1
+        MetricValue: '1'
   RootActivityAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
-      - rSecurityGroupChangesAlarm
+      - SecurityGroupChangesAlarm
       - TopicEndpointSubscription
     Properties:
       AlarmDescription: Root user activity detected!
@@ -1117,7 +1116,7 @@ Resources:
   UnauthorizedAttempts:
     Type: AWS::Logs::MetricFilter
     Properties:
-      LogGroupName: !Ref rCloudWatchLogGroup
+      LogGroupName: !Ref CloudWatchLogGroup
       FilterPattern: |-
         {
           ($.errorCode=AccessDenied) ||
@@ -1127,11 +1126,11 @@ Resources:
       MetricTransformations:
       - MetricNamespace: CloudTrailMetrics
         MetricName: UnauthorizedAttemptCount
-        MetricValue: 1
+        MetricValue: '1'
   UnauthorizedAttemptAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
-      - rRootActivityAlarm
+      - RootActivityAlarm
       - TopicEndpointSubscription
     Properties:
       AlarmDescription: Multiple unauthorized actions or logins attempted!
@@ -1149,7 +1148,7 @@ Resources:
   IAMPolicyChangesAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
-      - rUnauthorizedAttemptAlarm
+      - UnauthorizedAttemptAlarm
       - TopicEndpointSubscription
     Properties:
       AlarmDescription: IAM Configuration changes detected!
@@ -1167,7 +1166,7 @@ Resources:
   IAMCreateAccessKeyAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
-      - rIAMPolicyChangesAlarm
+      - IAMPolicyChangesAlarm
       - TopicEndpointSubscription
     Properties:
       AlarmDescription: 'Warning: New IAM access key was created. Please be sure this
@@ -1185,9 +1184,9 @@ Resources:
       - !Ref Topic
   IAMCreateAccessKey:
     Type: AWS::Logs::MetricFilter
-    DependsOn: rIAMCreateAccessKeyAlarm
+    DependsOn: IAMCreateAccessKeyAlarm
     Properties:
-      LogGroupName: !Ref rCloudWatchLogGroup
+      LogGroupName: !Ref CloudWatchLogGroup
       FilterPattern: |-
         {
           ($.eventName=CreateAccessKey)
@@ -1195,11 +1194,11 @@ Resources:
       MetricTransformations:
       - MetricNamespace: CloudTrailMetrics
         MetricName: NewAccessKeyCreated
-        MetricValue: 1
+        MetricValue: '1'
   CloudTrailChangeAlarm:
     Type: AWS::CloudWatch::Alarm
     DependsOn:
-      - rIAMCreateAccessKeyAlarm
+      - IAMCreateAccessKeyAlarm
       - TopicEndpointSubscription
     Properties:
       AlarmDescription: 'Warning: Changes to CloudTrail log configuration detected
@@ -1218,7 +1217,7 @@ Resources:
   CloudTrailChange:
     Type: AWS::Logs::MetricFilter
     Properties:
-      LogGroupName: !Ref rCloudWatchLogGroup
+      LogGroupName: !Ref CloudWatchLogGroup
       FilterPattern: |-
         {
           ($.eventSource = cloudtrail.amazonaws.com) &&
@@ -1232,7 +1231,7 @@ Resources:
       MetricTransformations:
       - MetricNamespace: CloudTrailMetrics
         MetricName: CloudTrailChangeCount
-        MetricValue: 1
+        MetricValue: '1'
 Outputs:
   DomainEndpoint:
     Description: ES domain endpoint URL
@@ -1251,6 +1250,6 @@ Outputs:
     Value: !Sub ${ClusterSize}
   CentralLogBucket:
     Description: "Central log bucket"
-    Value: !Ref rBucketName
+    Value: !Ref BucketName
     Export:
      Name: CentralLogBucketName1

@@ -37,7 +37,8 @@ Metadata:
       Parameters:
       - DBName
       - DBUser
-      - KMSalias
+      - DBPassword
+      - CentralLogBucket
     ParameterLabels:
       RegionAZ1Name:
         default: Choose 1 of 2 Availability Zones to Deploy Aurora
@@ -55,11 +56,17 @@ Metadata:
         default: Aurora Database Name
       DBUser:
         default: Aurora Database User
-      KMSalias:
-        default: CMK Alias
-
+      DBPassword:
+        default: Aurora Database Password
+      CentralLogBucket:
+        default: Centralized logging bucket
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
 Parameters:
   ProductionCIDR:
+    AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     Description: CIDR Range to allow ingress into Database
     Type: String
     Default: 10.100.0.0/16
@@ -84,14 +91,14 @@ Parameters:
   DBUser:
     Description: Username of DB Instance
     Type: String
-  KMSalias:
-    Description: An alias is a display name for a customer master key (CMK)
+  DBPassword:
+    Description: Password of DB Instance
     Type: String
+    NoEcho: True
   CentralLogBucket:
     Type: String
     Description: The Amazon S3 bucket to send Amazon Aurora audit logs
     Default: ''
-
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase
@@ -112,10 +119,9 @@ Parameters:
       forward slash (/). If you are unsure, do not change this value.
     Type: String
 Conditions:
-  GovCloudCondition:
-    !Equals
-    - !Ref AWS::Region
-    - us-gov-west-1
+  GovCloudCondition: !Or [!Equals [!Ref "AWS::Region", 'us-gov-west-1'], !Equals [!Ref "AWS::Region", 'us-gov-east-1']]
+  GovCloudEastCondition: !Equals [!Ref "AWS::Region", 'us-gov-east-1']
+  GovCloudWestCondition: !Equals [!Ref "AWS::Region", 'us-gov-west-1']
 Resources:
   ProcRole:
     Type: 'AWS::IAM::Role'
@@ -149,7 +155,7 @@ Resources:
               - s3:ListBucket
               - s3:ListBucketMultipartUploads
               - S3:PutObject
-              Resource: !Sub arn:aws:s3:::${pCentralLogBucket}
+              Resource: !Sub arn:aws:s3:::${CentralLogBucket}
             - Effect: Allow
               Action:
               - firehose:*
@@ -179,8 +185,7 @@ Resources:
         server_audit_logging: 1
         server_audit_events: CONNECT, QUERY, TABLE
         server_audit_logs_upload: 1
-
-  rCloudWatchRole:
+  CloudWatchRole:
     Type: AWS::IAM::Role
     DependsOn: StreamS3only
     Properties:
@@ -218,69 +223,57 @@ Resources:
                 Resource:
                 - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:%FIREHOSE_DEFAULT_FUNCTION%:%FIREHOSE_DEFAULT_VERSION%
                 - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:LambdaFirehoseProcessor
-
   SubscriptionFilterAudit:
     Type: AWS::Logs::SubscriptionFilter
     DependsOn:
       - StreamS3only
-      - rCloudWatchRole
+      - CloudWatchRole
     Properties:
       LogGroupName: /aws/rds/cluster/my-pcicluster1/audit
       FilterPattern: ''
       DestinationArn: !Sub arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics
       RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/CWLtoKinesisRole
-
-  rCloudWatchLogGroupS3:
+  CloudWatchLogGroupS3:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: /aws/rds/cluster/my-pcicluster1/S3
       RetentionInDays: 365
-
-  rCloudWatchLogGroupS3audit:
+  CloudWatchLogGroupS3audit:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: /aws/rds/cluster/my-pcicluster1/audit
       RetentionInDays: 365
-
-  rCloudWatchLogStreamS3:
+  CloudWatchLogStreamS3:
     Type: AWS::Logs::LogStream
-    DependsOn: rCloudWatchLogGroupS3
     Properties:
-      LogGroupName: !Ref rCloudWatchLogGroupS3
+      LogGroupName: !Ref CloudWatchLogGroupS3
       LogStreamName: !Sub aws-rds-s3-logs-${AWS::Region}
-
   StreamS3only:
     Type: AWS::KinesisFirehose::DeliveryStream
-    DependsOn:
-      - rFirehoseRoleS3
-      - rCloudWatchLogStreamS3
-      - rCloudWatchLogGroupS3
-      - LambdaFirehoseProcessor
     Properties:
       DeliveryStreamName: aws-rds-logs-analytics
       DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
-        BucketARN: !Sub arn:aws:s3:::${pCentralLogBucket}
+        BucketARN: !Sub arn:aws:s3:::${CentralLogBucket}
         BufferingHints:
           IntervalInSeconds: 60
           SizeInMBs: 120
         CloudWatchLoggingOptions:
           Enabled: true
-          LogGroupName: !Ref rCloudWatchLogGroupS3
-          LogStreamName: !Ref rCloudWatchLogStreamS3
+          LogGroupName: !Ref CloudWatchLogGroupS3
+          LogStreamName: !Ref CloudWatchLogStreamS3
         CompressionFormat: UNCOMPRESSED
         ErrorOutputPrefix: rds_error
         Prefix: !Sub aws-${AWS::Region}-rds-logs
-        RoleARN: !GetAtt rFirehoseRoleS3.Arn
+        RoleARN: !GetAtt FirehoseRoleS3.Arn
         ProcessingConfiguration:
-          Enabled: 'true'
+          Enabled: true
           Processors:
             - Parameters:
                 - ParameterName: LambdaArn
                   ParameterValue: !GetAtt LambdaFirehoseProcessor.Arn
               Type: Lambda
-
-  rFirehoseRoleS3:
+  FirehoseRoleS3:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -310,8 +303,8 @@ Resources:
                 - s3:ListBucket
                 - s3:PutObject
                 Resource:
-                - !Sub arn:aws:s3:::${pCentralLogBucket}
-                - !Sub arn:aws:s3:::${pCentralLogBucket}/*
+                - !Sub arn:aws:s3:::${CentralLogBucket}
+                - !Sub arn:aws:s3:::${CentralLogBucket}/*
               - Effect: Allow
                 Action:
                 - lambda:InvokeFunction
@@ -326,294 +319,45 @@ Resources:
               - Effect: Allow
                 Action: logs:PutLogEvents
                 Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/kinesisfirehose/aws-rds-logs-analytics:log-stream:*
-
-#This is a Secret resource with a randomly generated password in its SecretString JSON.
-  MyRDSInstanceRotationSecret:
-    Type: AWS::SecretsManager::Secret
-    Properties:
-      Description: "This is my pci db instance secret"
-      GenerateSecretString:
-        SecretStringTemplate: !Sub '{"username": "${pDBUser}"}'
-        GenerateStringKey: "password"
-        PasswordLength: 7
-        ExcludeCharacters: '"@/\'
-
-
-  #This is a SecretTargetAttachment resource which updates the referenced Secret resource with properties about
-  #the referenced RDS instance
-  SecretRDSInstanceAttachment:
-    Type: AWS::SecretsManager::SecretTargetAttachment
-    Properties:
-      SecretId: !Ref MyRDSInstanceRotationSecret
-      TargetId: !Ref rRDSInstanceAurora
-      TargetType: AWS::RDS::DBCluster
-
-  # This is a RotationSchedule resource. It configures rotation of the password for the referenced
-  # secret using a Lambda rotation function. The first rotation happens immediately when
-  # CloudFormation processes this resource type. All subsequent rotations are scheduled according to
-  # the configured rotation rules. We explicitly depend on the SecretTargetAttachment resource to
-  # ensure that the secret contains all the information necessary for rotation to succeed.
-  MySecretRotationSchedule:
-    Type: AWS::SecretsManager::RotationSchedule
-    DependsOn: SecretRDSInstanceAttachment
-    Properties:
-      SecretId: !Ref MyRDSInstanceRotationSecret
-      RotationLambdaARN: !GetAtt MyRotationLambda.Arn
-      RotationRules:
-        AutomaticallyAfterDays: 89
-
-  #This is a Lambda Permission resource that grants Secrets Manager permission to invoke the function
-  LambdaInvokePermission:
-    Type: AWS::Lambda::Permission
-    DependsOn: MyRotationLambda
-    Properties:
-      FunctionName: 'cfn-rotation-lambda'
-      Action: 'lambda:InvokeFunction'
-      Principal: secretsmanager.amazonaws.com
-
-  # This is an IAM Role resource. It gets attached to the Lambda rotation function and grants
-  # permissions to the function to retrieve and update the secret as part of the rotation process.
-  # It also includes the required KMS permissions and CloudWatch logging permissions.
-  MyLambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: 'cfn-rotation-lambda-role'
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          -
-            Effect: "Allow"
-            Principal:
-              Service:
-                - "lambda.amazonaws.com"
-            Action:
-              - "sts:AssumeRole"
-      Policies:
-        -
-          PolicyName: "AWSSecretsManagerRotationPolicy"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              -
-                Effect: "Allow"
-                Action:
-                  - "secretsmanager:DescribeSecret"
-                  - "secretsmanager:GetSecretValue"
-                  - "secretsmanager:PutSecretValue"
-                  - "secretsmanager:UpdateSecretVersionStage"
-                Resource: !Sub 'arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:*'
-                Condition:
-                  StringEquals:
-                    secretsmanager:resource/AllowRotationLambdaArn: !Sub 'arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:cfn-rotation-lambda'
-              -
-                Effect: "Allow"
-                Action:
-                  - "secretsmanager:GetRandomPassword"
-                Resource: "*"
-              -
-                Effect: "Allow"
-                Action:
-                  - "logs:CreateLogGroup"
-                  - "logs:CreateLogStream"
-                  - "logs:PutLogEvents"
-                Resource: "arn:aws:logs:*:*:*"
-              -
-                Effect: "Allow"
-                Action:
-                  - "kms:Decrypt"
-                  - "kms:DescribeKey"
-                  - "kms:GenerateDataKey"
-                Resource: "*"
-              -
-                Effect: "Allow"
-                Action:
-                  - "ec2:DescribeNetworkInterfaces"
-                  - "ec2:CreateNetworkInterface"
-                  - "ec2:DeleteNetworkInterface"
-                Resource: "*"
-
-  # This is a Lambda Function resource. We use this to create the rotation function that rotate
-  # our secret. For details about rotation Lambdas, see:
-  # https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotating-secrets.html
-  # This example assumes that the Lambda code is already present in an S3 bucket, and that it
-  # is coded to rotate a MySQL database password
-  MyRotationLambda:
-    Type: AWS::Lambda::Function
-    Properties:
-      Runtime: python2.7
-      Role: !GetAtt MyLambdaExecutionRole.Arn
-      Handler: lambda_function.lambda_handler
-      Description: 'This is a lambda to rotate MySql user passwd'
-      FunctionName: 'cfn-rotation-lambda'
-      Environment:
-        Variables:
-          SECRETS_MANAGER_ENDPOINT: !Sub 'https://secretsmanager.${AWS::Region}.amazonaws.com'
-      VpcConfig:
-        SecurityGroupIds:
-          - !Ref rSecurityGroupRDS
-        SubnetIds:
-          - !Ref pDBPrivateSubnetA
-          - !Ref pDBPrivateSubnetB
-      Code:
-        S3Bucket: !Join ["-",["aurora", "secretmanagebucket", Ref: "AWS::Region"]]
-        S3Key: "LambdaRotate.zip"
-      Timeout: 300
-
-
-  KMSAdminPolicy:
-    Type: AWS::IAM::Policy
-    DependsOn: KeyAdminsGroup
-    Properties:
-      Groups:
-        - DB_CMK_Admins
-      PolicyName: "KeyAdministrationPolicy"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          -
-            Effect: "Allow"
-            Action:
-              - "kms:Create*"
-              - "kms:Describe*"
-              - "kms:Enable*"
-              - "kms:List*"
-              - "kms:Put*"
-              - "kms:Update*"
-              - "kms:Revoke*"
-              - "kms:Disable*"
-              - "kms:Get*"
-              - "kms:Delete*"
-              - "kms:ScheduleKeyDeletion"
-              - "kms:CancelKeyDeletion"
-            Resource: "*"
-
-  KMSUsagePolicy:
-    Type: AWS::IAM::Policy
-    DependsOn: KeyUsageGroup
-    Properties:
-      Groups:
-        - DB_CMK_Usage
-      PolicyName: "KeyUsagePolicy"
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          -
-            #Sid: Allow usage of the CMK
-            Effect: "Allow"
-            Action:
-              - "kms:Encrypt"
-              - "kms:Decrypt"
-              - "kms:ReEncrypt*"
-              - "kms:GenerateDataKey*"
-              - "kms:DescribeKey"
-            Resource: "*"
-
-  KeyAdminsGroup:
-    Type: AWS::IAM::Group
-    Properties:
-      GroupName: DB_CMK_Admins
-  KeyUsageGroup:
-    Type: AWS::IAM::Group
-    Properties:
-      GroupName: DB_CMK_Usage
-  myAlias:
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub 'alias/${KMSalias}'
-      TargetKeyId: !Ref myKey
-  myKey:
-    Type: AWS::KMS::Key
-    Properties:
-      Description: My CMK
-      EnableKeyRotation: True
-      Enabled: true
-      KeyPolicy:
-        Version: 2012-10-17
-        Id: default
-        Statement:
-          - Sid: Enable IAM User Permissions
-            Effect: Allow
-            Principal:
-              AWS: !Join
-                - ''
-                - - 'arn:aws:iam::'
-                  - !Ref 'AWS::AccountId'
-                  - ':root'
-            Action: 'kms:*'
-            Resource: '*'
-      KeyUsage: ENCRYPT_DECRYPT
-      PendingWindowInDays: 7
-
-  rSecurityGroupRDS:
+  SecurityGroupRDS:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Port 3306 database for access
       GroupName: RDS SecurityGroup
-      VpcId: !Ref pProductionVPC
+      VpcId: !Ref ProductionVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
         FromPort: 3306
         ToPort: 3306
-        CidrIp: !Ref pProductionCIDR
+        CidrIp: !Ref ProductionCIDR
       Tags:
       - Key: Name
         Value: sg-database-access
-
-  rDBSubnetGroup:
-    Type: AWS::RDS::DBSubnetGroup
+  AuroraStack:
+    Type: 'AWS::CloudFormation::Stack'
     Properties:
-      DBSubnetGroupDescription: RDS Subnet Group
-      DBSubnetGroupName: aurorasubnetgroup
-      SubnetIds:
-      - !Ref pDBPrivateSubnetA
-      - !Ref pDBPrivateSubnetB
-  rRDSInstanceAurora:
-    Type: AWS::RDS::DBCluster
-    DependsOn:
-    - rDBSubnetGroup
-    - rSecurityGroupRDS
-    - myKey
-    - DBParamGroup
-    Properties:
-      AvailabilityZones:
-        - !Ref pRegionAZ1Name
-        - !Ref pRegionAZ2Name
-      DatabaseName: !Ref pDBName
-      DBClusterIdentifier: my-pcicluster1
-      Engine: aurora
-      EnableIAMDatabaseAuthentication: true
-      DBClusterParameterGroupName: !Ref DBParamGroup
-      EnableCloudwatchLogsExports:
-        - audit
-        - error
-        - general
-        - slowquery
-      StorageEncrypted: true
-      KmsKeyId: !Ref myKey
-      MasterUsername: !Ref pDBUser
-      MasterUserPassword: !Join ['', ['{{resolve:secretsmanager:', !Ref MyRDSInstanceRotationSecret, '::password}}' ]]
-      VpcSecurityGroupIds:
-      - !Ref rSecurityGroupRDS
-      DBSubnetGroupName: !Ref rDBSubnetGroup
-  RDSDBInstance1:
-    Type: AWS::RDS::DBInstance
-    DependsOn:
-    - rRDSInstanceAurora
-    - rDBSubnetGroup
-    - rSecurityGroupRDS
-    Properties:
-      DBClusterIdentifier: !Ref rRDSInstanceAurora
-      DBInstanceClass: db.r3.xlarge
-      DBSubnetGroupName: !Ref rDBSubnetGroup
-      Engine: aurora
+      TemplateURL: !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-amazon-aurora-mysql/templates/aurora_mysql.template.yaml
+        - QSS3Region:
+            Fn::If:
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+      Parameters:
+        Subnet1ID: !Ref DBPrivateSubnetA
+        Subnet2ID: !Ref DBPrivateSubnetB
+        VPCID: !Ref ProductionVPC
+        DBName: !Ref DBName
+        DBMasterUsername: !Ref DBUser
+        DBMasterUserPassword: !Ref DBPassword
+        RotateDBPassword: 'true'
+        CustomDBSecurityGroup: !Ref SecurityGroupRDS
 
 Outputs:
-  rSecurityGroupRDS:
-    Value: !Ref rSecurityGroupRDS
-  rKMSID:
-    Value: !Ref myAlias
-  rDBName:
-    Value: !Ref pDBName
+  SecurityGroupRDS:
+    Value: !Ref SecurityGroupRDS
+  DBName:
+    Value: !Ref DBName
   Help:
     Description: For assistance or questions regarding this quickstart please email
       compliance-accelerator@amazon.com

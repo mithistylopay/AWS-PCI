@@ -36,16 +36,16 @@ Metadata:
       - RequireNumbers
       - RequireSymbols
       - RequireUppercaseChars
+    - Label:
+        default: Database configuration
+      Parameters:
+        - DBUsername
+        - DBPassword
     ParameterLabels:
       EC2KeyPairBastion:
         default: Existing SSH Key for the Bastion Instance. This should have been created in the pre-deployment steps.
       EC2KeyPair:
         default: Existing SSH Key for Other Instances. This should have been created in the pre-deployment steps.
-    AvailabilityZones:
-      Description: List of Availability Zones to use for the subnets in the VPC. This deployment uses two
-        Availability Zones, and the logical order of your
-        selections is preserved.
-      Type: List<AWS::EC2::AvailabilityZone::Name>
       AvailabilityZoneA:
         default: First Availability Zone
       AvailabilityZoneB:
@@ -145,7 +145,19 @@ Parameters:
       can include numbers, lowercase letters, uppercase letters, hyphens (-), and
       forward slash (/). If you are unsure, do not change this value.
     Type: String
+  DBUsername:
+    Description: Username of DB Instance
+    Type: String
+  DBPassword:
+    Description: Password of DB Instance
+    Type: String
+    NoEcho: True
 Mappings:
+  CustomVariables:
+    vResourceEnvironmentTagKey:
+      Value: Environment
+    vResourceEnvironmentTagValue:
+      Value: development
   Instances:
     ap-northeast-1:
       InstanceType: m4.large
@@ -183,8 +195,6 @@ Mappings:
     us-east-2:
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
-    # us-gov-west-1:
-    #   NatGateway: 'true'
     us-west-1:
       InstanceType: m4.large
       InstanceTypeDatabase: db.m4.large
@@ -220,6 +230,8 @@ Mappings:
       AMZNLINUXHVM: ami-04768381bf606e2b3
     us-gov-west-1:
       AMZNLINUXHVM: ami-ffa61d9e
+    us-gov-east-1:
+      AMZNLINUXHVM: ami-slkdf
     us-west-1:
       AMZNLINUXHVM: ami-063dd30adbb186909
     us-west-2:
@@ -231,7 +243,7 @@ Conditions:
     - us-gov-west-1
   LaunchAsDedicatedInstance:
     !Equals
-    - !Ref pVPCTenancy
+    - !Ref VPCTenancy
     - dedicated
 Resources:
   IAMPasswordPolicy:
@@ -368,27 +380,10 @@ Resources:
         pDBPrivateSubnetACIDR: 10.100.194.0/21
         pDBPrivateSubnetBCIDR: 10.100.212.0/21
         pVPCTenancy: !Ref VPCTenancy
-        pEC2KeyPair: !Ref EC2KeyPair
-        pSupportsNatGateway:
-          !FindInMap
-          - RegionServiceSupport
-          - !Ref AWS::Region
-          - NatGateway
-        pNatAmi:
-          !FindInMap
-          - AWSAMIRegionMap
-          - !Ref AWS::Region
-          - AMZNLINUXHVM
-        pNatInstanceType:
-          !FindInMap
-          - InstanceType
-          - !Ref AWS::Region
-          - InstanceType
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}submodules/quickstart-compliance-common/
   ManagementVpcTemplate:
     Type: AWS::CloudFormation::Stack
-    DependsOn: ProductionVpcTemplate
     Properties:
       TemplateURL:
         !Sub
@@ -435,27 +430,14 @@ Resources:
           - LaunchAsDedicatedInstance
           - m4.large
           - t2.small
-        pSupportsNatGateway: 'true'
-        pNatAmi:
-          !FindInMap
-          - AWSAMIRegionMap
-          - !Ref AWS::Region
-          - AMZNLINUXHVM
-        pNatInstanceType:
-          !FindInMap
-          - InstanceType
-          - !Ref AWS::Region
-          - InstanceType
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}submodules/quickstart-compliance-common/
   ConfigRulesTemplate:
     Type: AWS::CloudFormation::Stack
-    Condition: LoadConfigRulesTemplate
     DependsOn:
     - IamTemplate
     - ProductionVpcTemplate
     - ManagementVpcTemplate
-    - LoggingTemplate
     Properties:
       TemplateURL:
         !Sub
@@ -486,10 +468,6 @@ Resources:
             - s3
       TimeoutInMinutes: 30
       Parameters:
-        SecurityAlarmTopic:
-          !GetAtt
-          - LoggingTemplate
-          - Outputs.rSecurityAlarmTopic
         EC2KeyPair: !Ref EC2KeyPair
         ProductionCIDR: 10.100.0.0/16
         ProductionVPC:
@@ -512,59 +490,22 @@ Resources:
           !GetAtt
           - ProductionVpcTemplate
           - Outputs.rAppPrivateSubnetB
-        WebInstanceType:
-          !FindInMap
-          - InstanceType
-          - !Ref AWS::Region
-          - InstanceType
-        AppInstanceType:
-          !FindInMap
-          - InstanceType
-          - !Ref AWS::Region
-          - InstanceType
-        DBPrivateSubnetA:
-          !GetAtt
-          - ProductionVpcTemplate
-          - Outputs.rDBPrivateSubnetA
-        DBPrivateSubnetB:
-          !GetAtt
-          - ProductionVpcTemplate
-          - Outputs.rDBPrivateSubnetB
         ManagementCIDR: 10.10.0.0/16
         RegionAZ1Name: !Ref AvailabilityZoneA
         RegionAZ2Name: !Ref AvailabilityZoneB
-        WebServerAMI:
-          !FindInMap
-          - AWSAMIRegionMap
-          - !Ref AWS::Region
-          - AMZNLINUXHVM
-        AppAmi:
-          !FindInMap
-          - AWSAMIRegionMap
-          - !Ref AWS::Region
-          - AMZNLINUXHVM
-        DBUser: testuserdb
-        DBName: testDB
-        DBPassword: !Ref DBPassword
         DBClass:
           !FindInMap
-          - InstanceType
+          - Instances
           - !Ref AWS::Region
           - InstanceTypeDatabase
         DBAllocatedStorage: '10'
-        Environment:
-          !FindInMap
-          - CustomVariables
-          - vResourceEnvironmentTagValue
-          - Value
+        Environment: 'production'
         BastionSSHCIDR: 0.0.0.0/0
-        SupportsGlacier:
-          !FindInMap
-          - RegionServiceSupport
-          - !Ref AWS::Region
-          - Glacier
+        SupportsGlacier: 'true'
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        AvailabilityZoneA: !Ref AvailabilityZoneA
+        AvailabilityZoneB: !Ref AvailabilityZoneB
 Outputs:
   TemplateType:
     Value: Standard Architecture
@@ -576,7 +517,4 @@ Outputs:
       !GetAtt
       - ManagementVpcTemplate
       - Outputs.rBastionInstanceIP
-    Description: For assistance or questions regarding this quickstart please email
-      compliance-accelerator@amazon.com
-    Value: ''
-...
+.5..

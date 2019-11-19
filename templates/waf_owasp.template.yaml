@@ -29,13 +29,6 @@ Parameters:
     AllowedPattern: ^[a-zA-z0-9]+$
     MaxLength: 10
     Default: standard
-  stackScope:
-    Type: String
-    Description: You can deploy this stack at a regional level, for regional WAF targets like Application Load Balancers, or for global targets, such as Amazon CloudFront distributions.
-    AllowedValues:
-      - Global
-      - Regional
-    Default: Regional
   ruleAction:
     Type: String
     Description: The type of action you want to iplement for the rules in this set. Valid options are COUNT or BLOCK.
@@ -105,7 +98,6 @@ Metadata:
       - Label:
           default: WAF Implementation
         Parameters:
-          - stackScope
           - ruleAction
       - Label:
           default: Generic HTTP Request Enforcement
@@ -128,11 +120,18 @@ Metadata:
           default: Application Specific
         Parameters:
           - includesPrefix
+      - Label:
+          default: Logging configuration
+        Parameters:
+          - CentralLogBucket
+          - WAFLogging
+      - Label:
+          default: ElasticSearch Configuration
+        Parameters:
+          - ESClusterARN
     ParameterLabels:
       stackPrefix:
         default: Resource Name Prefix
-      stackScope:
-        default: Apply to WAF
       ruleAction:
         default: Rule Effect
       includesPrefix:
@@ -164,30 +163,28 @@ Conditions:
 ## Resources used in this solution
 
 Resources:
-  rCloudWatchLogGroupES:
+  CloudWatchLogGroupES:
     Type: AWS::Logs::LogGroup
     Condition: isElastic
     Properties:
       LogGroupName: AWS_WAF_ES
       RetentionInDays: 365
 
-  rCloudWatchLogStreamES:
+  CloudWatchLogStreamES:
     Type: AWS::Logs::LogStream
     Condition: isElastic
-    DependsOn: rCloudWatchLogGroupES
     Properties:
       LogGroupName: AWS_WAF_ES
       LogStreamName: !Sub AWS_WAF_ES_${AWS::Region}
 
-  rCloudWatchLogGroupS3:
+  CloudWatchLogGroupS3:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: AWS_WAF_S3
       RetentionInDays: 365
 
-  rCloudWatchLogStreamS3:
+  CloudWatchLogStreamS3:
     Type: AWS::Logs::LogStream
-    DependsOn: rCloudWatchLogGroupS3
     Properties:
       LogGroupName: AWS_WAF_S3
       LogStreamName: !Sub AWS_WAF_S3_${AWS::Region}
@@ -195,12 +192,6 @@ Resources:
   FirehoseStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Condition: isElastic
-    DependsOn:
-      - rFirehoseRoleES
-      - rCloudWatchLogStreamES
-      - rCloudWatchLogGroupES
-      - rCloudWatchLogStreamS3
-      - rCloudWatchLogGroupS3
     Properties:
       DeliveryStreamName: aws-waf-logs-analytics
       DeliveryStreamType: DirectPut
@@ -210,8 +201,8 @@ Resources:
             SizeInMBs: 1
           CloudWatchLoggingOptions:
             Enabled: true
-            LogGroupName: !Ref rCloudWatchLogGroupES
-            LogStreamName: !Ref rCloudWatchLogStreamES
+            LogGroupName: !Ref CloudWatchLogGroupES
+            LogStreamName: !Ref CloudWatchLogStreamES
           DomainARN: !Ref pESClusterARN
           IndexName: awswaf-
           IndexRotationPeriod: NoRotation
@@ -226,8 +217,8 @@ Resources:
               SizeInMBs: 1
             CloudWatchLoggingOptions:
               Enabled: true
-              LogGroupName: !Ref rCloudWatchLogGroupS3
-              LogStreamName: !Ref rCloudWatchLogStreamS3
+              LogGroupName: !Ref CloudWatchLogGroupS3
+              LogStreamName: !Ref CloudWatchLogStreamS3
             CompressionFormat: UNCOMPRESSED
             ErrorOutputPrefix: WAF_error
             Prefix: !Sub AWS_WAF_S3_${AWS::Region}
@@ -237,10 +228,6 @@ Resources:
   StreamS3only:
     Type: AWS::KinesisFirehose::DeliveryStream
     Condition: isCentralOnly
-    DependsOn:
-      - rFirehoseRoleS3
-      - rCloudWatchLogStreamS3
-      - rCloudWatchLogGroupS3
     Properties:
       DeliveryStreamName: aws-waf-logs-analytics
       DeliveryStreamType: DirectPut
@@ -251,8 +238,8 @@ Resources:
           SizeInMBs: 120
         CloudWatchLoggingOptions:
           Enabled: true
-          LogGroupName: !Ref rCloudWatchLogGroupS3
-          LogStreamName: !Ref rCloudWatchLogStreamS3
+          LogGroupName: !Ref CloudWatchLogGroupS3
+          LogStreamName: !Ref CloudWatchLogStreamS3
         CompressionFormat: UNCOMPRESSED
         ErrorOutputPrefix: WAF_error
         Prefix: !Sub AWS_WAF_S3_${AWS::Region}
