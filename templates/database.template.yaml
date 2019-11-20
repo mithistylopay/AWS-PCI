@@ -362,6 +362,8 @@ Resources:
         SourceObjects: "functions/packages/FHProcessor/lambda.zip"
 
 Outputs:
+  AuroraClusterEndpoint:
+    Value: !GetAtt AuroraStack.Outputs.AuroraClusterEndpoint
   SecurityGroupRDS:
     Value: !Ref SecurityGroupRDS
   DBName:
