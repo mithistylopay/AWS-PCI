@@ -14,12 +14,16 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: 'Please provide the following parameter values:'
+        default: 'VPC Configuration'
+      Parameters:
+      - VPCTenancy
+      - AvailabilityZoneA
+      - AvailabilityZoneB
+    - Label:
+        default: "EC2 Configuration"
       Parameters:
       - EC2KeyPairBastion
       - EC2KeyPair
-      - AvailabilityZoneA
-      - AvailabilityZoneB
     - Label:
         default: AWS Quick Start Configuration
       Parameters:
@@ -40,10 +44,6 @@ Metadata:
       Parameters:
         - DBUsername
         - DBPassword
-    - Label:
-        default: VPC Configuration
-      Parameters:
-        - VPCTenancy
     ParameterLabels:
       EC2KeyPairBastion:
         default: Existing SSH Key for the Bastion Instance. This should have been created in the pre-deployment steps.
