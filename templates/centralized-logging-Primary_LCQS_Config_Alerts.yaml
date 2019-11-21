@@ -103,12 +103,12 @@ Metadata:
     - Label:
         default: S3 Central Logging Bucket Name
       Parameters:
-      - rBucketName
+      - BucketName
     - Label:
         default: AWS Config
       Parameters:
-      - pDeployConfigRule
-      - tpRequiredTagKey
+      - DeployConfigRule
+      - RequiredTagKey
     ParameterLabels:
       CognitoAdminEmail:
         default: Cognito Admin email address

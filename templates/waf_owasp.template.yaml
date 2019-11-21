@@ -99,6 +99,8 @@ Metadata:
           default: WAF Implementation
         Parameters:
           - ruleAction
+          - pWAFLogging
+          - pELBWeb
       - Label:
           default: Generic HTTP Request Enforcement
         Parameters:
@@ -123,12 +125,12 @@ Metadata:
       - Label:
           default: Logging configuration
         Parameters:
-          - CentralLogBucket
-          - WAFLogging
+          - pCentralLogBucket
+          - pWAFLogging
       - Label:
           default: ElasticSearch Configuration
         Parameters:
-          - ESClusterARN
+          - pESClusterARN
     ParameterLabels:
       stackPrefix:
         default: Resource Name Prefix
@@ -152,6 +154,14 @@ Metadata:
         default: HTTP Request Header
       csrfExpectedSize:
         default: Token Size
+      pELBWeb:
+        default: WAF ELB ARN
+      pWAFLogging:
+        default: WAF Logging
+      pCentralLogBucket:
+        default: Central Logging Bucket
+      pESClusterARN:
+        default: ElasticSearch Cluster ARN
 
 ## ::CONDITIONS::
 ## Determines if we're streaming to ES or S3
