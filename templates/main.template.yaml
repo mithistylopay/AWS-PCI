@@ -1,4 +1,3 @@
----
 AWSTemplateFormatVersion: 2010-09-09
 Description: Provides nesting for required stacks to deploy a baseline architecure to support PCI compliance.
 Metadata:
@@ -15,12 +14,16 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: 'Please provide the following parameter values:'
+        default: 'VPC Configuration'
+      Parameters:
+      - VPCTenancy
+      - AvailabilityZoneA
+      - AvailabilityZoneB
+    - Label:
+        default: "EC2 Configuration"
       Parameters:
       - EC2KeyPairBastion
       - EC2KeyPair
-      - AvailabilityZoneA
-      - AvailabilityZoneB
     - Label:
         default: AWS Quick Start Configuration
       Parameters:
@@ -56,6 +59,25 @@ Metadata:
         default: Quick Start S3 Bucket Name
       QSS3KeyPrefix:
         default: Quick Start S3 Key Prefix
+      MaxPasswordAge:
+        default: Max Password Age
+      MinPasswordLength:
+        default: Minimum Password Length
+      PasswordHistory:
+        default: Maximum Password Age (days)
+      RequireLowercaseChars:
+        default: Require Lowercase Characters
+      RequireNumbers:
+        default: Require Numbers
+      RequireSymbols:
+        default: Require Symbols
+      RequireUppercaseChars:
+        default: Require Uppercase Characters
+      DBUsername:
+        default: Database Username
+      DBPassword:
+        default: Database Password
+
 Parameters:
   EC2KeyPairBastion:
     Description: The SSH key pair in your account to use for the bastion host login
@@ -146,6 +168,7 @@ Parameters:
       forward slash (/). If you are unsure, do not change this value.
     Type: String
   DBUsername:
+    Default: 'admin'
     Description: Username of DB Instance
     Type: String
   DBPassword:
@@ -454,6 +477,38 @@ Resources:
           - CustomVariables
           - vResourceEnvironmentTagKey
           - Value
+  DatabaseTemplate:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ProductionVpcTemplate
+    Properties:
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/database.template.yaml
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+      Parameters:
+        ProductionVPC:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rVPCProduction
+        DBPrivateSubnetA:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rAppPrivateSubnetA
+        DBPrivateSubnetB:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rAppPrivateSubnetB
+        RegionAZ1Name: !Ref AvailabilityZoneA
+        RegionAZ2Name: !Ref AvailabilityZoneB
+        DBName: 'example-wordpress'
+        DBUser: !Ref DBUsername
+        DBPassword: !Ref DBPassword
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
   ApplicationTemplate:
     Type: AWS::CloudFormation::Stack
     DependsOn: ProductionVpcTemplate
@@ -498,7 +553,6 @@ Resources:
           - Instances
           - !Ref AWS::Region
           - InstanceTypeDatabase
-        DBAllocatedStorage: '10'
         Environment: 'production'
         BastionSSHCIDR: 0.0.0.0/0
         SupportsGlacier: 'true'
@@ -517,4 +571,3 @@ Outputs:
       !GetAtt
       - ManagementVpcTemplate
       - Outputs.rBastionInstanceIP
-.5..
