@@ -357,8 +357,8 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/copy-zips.template.yaml"
       Parameters:
-        S3BucketName: !Ref 'QSS3BucketName'
-        S3KeyPrefix: !Ref 'QSS3KeyPrefix'
+        QSS3BucketName: !Ref 'QSS3BucketName'
+        QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
         SourceObjects: "functions/packages/FHProcessor/lambda.zip"
 
 Outputs:
