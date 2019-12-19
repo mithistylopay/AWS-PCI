@@ -16,48 +16,48 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: AWS Quick Start Configuration
-      Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-    - Label:
-        default: Availability Zone Selection
+        default: Availability Zone selection
       Parameters:
       - RegionAZ1Name
       - RegionAZ2Name
     - Label:
-        default: Network (existing VPC config)
+        default: Network configuration (existing VPC)
       Parameters:
       - ProductionCIDR
       - ProductionVPC
       - DBPrivateSubnetA
       - DBPrivateSubnetB
     - Label:
-        default: Database Configuration
+        default: Database configuration
       Parameters:
       - DBName
       - DBUser
       - DBPassword
       - CentralLogBucket
+    - Label:
+        default: AWS Quick Start configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3KeyPrefix
     ParameterLabels:
       RegionAZ1Name:
-        default: Choose 1 of 2 Availability Zones to Deploy Aurora
+        default: First Availability Zone for Aurora
       RegionAZ2Name:
-        default: Choose 2 of 2 Availability Zones to Deploy Aurora
+        default: Second Availability Zone for Aurora
       ProductionCIDR:
-        default: Ingress to Aurora Database
+        default: CIDR for Aurora database
       ProductionVPC:
-        default: VPC to Deploy Aurora Database
+        default: VPC ID for Aurora database
       DBPrivateSubnetA:
-        default: Choose 1 of 2 Subnets to Create a Subnet Group for Aurora
+        default: First private database subnet for Aurora
       DBPrivateSubnetB:
-        default: Choose 2 of 2 Subnets to Create a Subnet Group for Aurora
+        default: Second private database subnet for Aurora
       DBName:
-        default: Aurora Database Name
+        default: Aurora database name
       DBUser:
-        default: Aurora Database User
+        default: Aurora database user
       DBPassword:
-        default: Aurora Database Password
+        default: Aurora database password
       CentralLogBucket:
         default: Centralized logging bucket
       QSS3BucketName:
@@ -67,37 +67,37 @@ Metadata:
 Parameters:
   ProductionCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
-    Description: CIDR Range to allow ingress into Database
+    Description: CIDR Range to allow input into the database.
     Type: String
     Default: 10.100.0.0/16
   ProductionVPC:
-    Description: Production VPC
+    Description: ID of the VPC where you will deploy the Aurora database cluster.
     Type: AWS::EC2::VPC::Id
   DBPrivateSubnetA:
-    Description: Database Private Subnet A
+    Description: The ID of the first private subnet in your Production VPC.
     Type: AWS::EC2::Subnet::Id
   DBPrivateSubnetB:
-    Description: Database Private Subnet B
+    Description: The ID of the second private subnet in your Production VPC.
     Type: AWS::EC2::Subnet::Id
   RegionAZ1Name:
-    Description: AvailabilityZone 1
+    Description: The name of the first Availability Zone where you will deploy the Aurora database cluster.
     Type: AWS::EC2::AvailabilityZone::Name
   RegionAZ2Name:
-    Description: AvailabilityZone 2
+    Description: The name of the second Availability Zone where you will deploy the Aurora database cluster.
     Type: AWS::EC2::AvailabilityZone::Name
   DBName:
-    Description: Name of RDS Database
+    Description: Name of the Aurora database.
     Type: String
   DBUser:
-    Description: Username of DB Instance
+    Description: The user name for the database administrator of the Aurora database.
     Type: String
   DBPassword:
-    Description: Password of DB Instance
+    Description: Password for the database instance.
     Type: String
     NoEcho: True
   CentralLogBucket:
     Type: String
-    Description: The Amazon S3 bucket to send Amazon Aurora audit logs
+    Description: The S3 bucket to send Aurora audit logs. This can be the bucket that you created when you launched the centralized logging template.
     Default: ''
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
