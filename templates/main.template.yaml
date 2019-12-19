@@ -14,41 +14,41 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: 'VPC Configuration'
+        default: 'VPC configuration'
       Parameters:
       - VPCTenancy
       - AvailabilityZoneA
       - AvailabilityZoneB
     - Label:
-        default: "EC2 Configuration"
+        default: "Amazon EC2 configuration"
       Parameters:
       - EC2KeyPairBastion
       - EC2KeyPair
     - Label:
-        default: AWS Quick Start Configuration
-      Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-    - Label:
-        default: IAM Password Policy
+        default: IAM password policy
       Parameters:
       - MaxPasswordAge
       - MinPasswordLength
       - PasswordHistory
       - RequireLowercaseChars
+      - RequireUppercaseChars
       - RequireNumbers
       - RequireSymbols
-      - RequireUppercaseChars
     - Label:
         default: Database configuration
       Parameters:
         - DBUsername
         - DBPassword
+    - Label:
+        default: AWS Quick Start configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3KeyPrefix
     ParameterLabels:
       EC2KeyPairBastion:
-        default: Existing SSH Key for the Bastion Instance. This should have been created in the pre-deployment steps.
+        default: Existing SSH key for the bastion instance
       EC2KeyPair:
-        default: Existing SSH Key for Other Instances. This should have been created in the pre-deployment steps.
+        default: Existing SSH key for other instances
       AvailabilityZoneA:
         default: First Availability Zone
       AvailabilityZoneB:
@@ -56,93 +56,93 @@ Metadata:
       VPCTenancy:
         default: Instance tenancy
       QSS3BucketName:
-        default: Quick Start S3 Bucket Name
+        default: Quick Start S3 bucket name
       QSS3KeyPrefix:
-        default: Quick Start S3 Key Prefix
+        default: Quick Start S3 key prefix
       MaxPasswordAge:
-        default: Max Password Age
+        default: Maximum password age
       MinPasswordLength:
-        default: Minimum Password Length
+        default: Minimum password length
       PasswordHistory:
-        default: Maximum Password Age (days)
+        default: Previous passwords retained
       RequireLowercaseChars:
-        default: Require Lowercase Characters
+        default: Lowercase characters required
       RequireNumbers:
-        default: Require Numbers
+        default: Number required
       RequireSymbols:
-        default: Require Symbols
+        default: Symbol required
       RequireUppercaseChars:
-        default: Require Uppercase Characters
+        default: Uppercase character required
       DBUsername:
-        default: Database Username
+        default: Database user name
       DBPassword:
-        default: Database Password
+        default: Database password
 
 Parameters:
   EC2KeyPairBastion:
-    Description: The SSH key pair in your account to use for the bastion host login
+    Description: The SSH key pair in your account to use for the bastion host login. This is one of the keys that you created in the pre-deployment steps.
     Type: AWS::EC2::KeyPair::KeyName
   EC2KeyPair:
-    Description: The SSH key pair in your account to use for all other EC2 instance
+    Description: The SSH key pair in your account to use for all other EC2 instance logins. This is one of the keys that you created in the pre-deployment steps.
       logins
     Type: AWS::EC2::KeyPair::KeyName
   AvailabilityZoneA:
-    Description: Availability Zone 1
+    Description: The name of Availability Zone 1.
     Type: AWS::EC2::AvailabilityZone::Name
   AvailabilityZoneB:
-    Description: Availability Zone 2. NOTE - This should be different than the AZ above.
+    Description: The name of Availability Zone 2. This must be different from the name of the first Availability Zone.
     Type: AWS::EC2::AvailabilityZone::Name
   MaxPasswordAge:
     Type: 'Number'
-    Description: 'Maximum age for passwords'
+    Description: 'Maximum age for passwords, in number of days.'
     Default: 90
     ConstraintDescription: '(90-365 days)'
     MinValue: 1
     MaxValue: 90
   MinPasswordLength:
     Type: 'Number'
-    Description: 'Minimum password length'
+    Description: 'Minimum password length.'
     Default: 7
     ConstraintDescription: '(8-128 characters)'
     MinValue: 7
     MaxValue: 128
   PasswordHistory:
     Type: 'Number'
-    Description: 'Number of previous passwords to remember'
+    Description: 'Number of previous passwords to remember.'
     Default: 4
     ConstraintDescription: '(1-24 passwords)'
     MinValue: 4
     MaxValue: 24
   RequireLowercaseChars:
     Type: 'String'
-    Description: 'Require at least one lowercase character'
+    Description: 'Password requirement of at least one lowercase character.'
     Default: 'True'
     AllowedValues:
     - 'True'
     - 'False'
   RequireNumbers:
     Type: 'String'
-    Description: 'Require at least one number'
+    Description: 'Password requirement of at least one number.'
     Default: 'True'
     AllowedValues:
     - 'True'
     - 'False'
   RequireSymbols:
     Type: 'String'
-    Description: 'Require at least one symbol'
+    Description: 'Password requirement of at least one nonalphanumeric character.'
     Default: 'True'
     AllowedValues:
     - 'True'
     - 'False'
   RequireUppercaseChars:
     Type: 'String'
-    Description: 'Require at least one uppercase character'
+    Description: 'Password requirement of at least one uppercase character.'
     Default: 'True'
     AllowedValues:
     - 'True'
     - 'False'
   VPCTenancy:
-    Description: Instance tenancy behavior for this VPC. If unsure, leave as default.
+    Description: The tenancy attribute for the instances launched into the VPC. If unsure, leave as default.
     Type: String
     Default: default
     AllowedValues:
@@ -169,10 +169,10 @@ Parameters:
     Type: String
   DBUsername:
     Default: 'admin'
-    Description: Username of DB Instance
+    Description: User name for connecting to the database instance.
     Type: String
   DBPassword:
-    Description: Password of DB Instance
+    Description: Password for connecting to the database instance.
     Type: String
     NoEcho: True
 Mappings:
