@@ -13,37 +13,37 @@ Metadata:
     Description: N/A
   AWS::CloudFormation::Interface:
     ParameterGroups:
-    - Label:
-        default: 'VPC Configuration'
-      Parameters:
-      - VPCTenancy
-      - AvailabilityZoneA
-      - AvailabilityZoneB
-    - Label:
-        default: "EC2 Configuration"
-      Parameters:
-      - EC2KeyPairBastion
-      - EC2KeyPair
-    - Label:
-        default: AWS Quick Start Configuration
-      Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-    - Label:
-        default: IAM Password Policy
-      Parameters:
-      - MaxPasswordAge
-      - MinPasswordLength
-      - PasswordHistory
-      - RequireLowercaseChars
-      - RequireNumbers
-      - RequireSymbols
-      - RequireUppercaseChars
-    - Label:
-        default: Database configuration
-      Parameters:
-        - DBUsername
-        - DBPassword
+      - Label:
+          default: 'VPC Configuration'
+        Parameters:
+          - VPCTenancy
+          - AvailabilityZoneA
+          - AvailabilityZoneB
+      - Label:
+          default: "EC2 Configuration"
+        Parameters:
+          - EC2KeyPairBastion
+          - EC2KeyPair
+      - Label:
+          default: AWS Quick Start Configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+      - Label:
+          default: IAM Password Policy
+        Parameters:
+          - MaxPasswordAge
+          - MinPasswordLength
+          - PasswordHistory
+          - RequireLowercaseChars
+          - RequireNumbers
+          - RequireSymbols
+          - RequireUppercaseChars
+      - Label:
+          default: Database configuration
+        Parameters:
+          - DBUsername
+          - DBPassword
     ParameterLabels:
       EC2KeyPairBastion:
         default: Existing SSH Key for the Bastion Instance. This should have been created in the pre-deployment steps.
@@ -118,36 +118,36 @@ Parameters:
     Description: 'Require at least one lowercase character'
     Default: 'True'
     AllowedValues:
-    - 'True'
-    - 'False'
+      - 'True'
+      - 'False'
   RequireNumbers:
     Type: 'String'
     Description: 'Require at least one number'
     Default: 'True'
     AllowedValues:
-    - 'True'
-    - 'False'
+      - 'True'
+      - 'False'
   RequireSymbols:
     Type: 'String'
     Description: 'Require at least one symbol'
     Default: 'True'
     AllowedValues:
-    - 'True'
-    - 'False'
+      - 'True'
+      - 'False'
   RequireUppercaseChars:
     Type: 'String'
     Description: 'Require at least one uppercase character'
     Default: 'True'
     AllowedValues:
-    - 'True'
-    - 'False'
+      - 'True'
+      - 'False'
   VPCTenancy:
     Description: Instance tenancy behavior for this VPC. If unsure, leave as default.
     Type: String
     Default: default
     AllowedValues:
-    - default
-    - dedicated
+      - default
+      - dedicated
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
     ConstraintDescription: Quick Start bucket name can include numbers, lowercase
@@ -184,46 +184,32 @@ Mappings:
   Instances:
     ap-northeast-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ap-northeast-2:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ap-south-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ap-southeast-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ap-southeast-2:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     ca-central-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     eu-central-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     eu-west-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     eu-west-2:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     sa-east-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m3.large
     us-east-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     us-east-2:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     us-west-1:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
     us-west-2:
       InstanceType: m4.large
-      InstanceTypeDatabase: db.m4.large
       ConfigRules: 'true'
       Glacier: 'true'
   AWSAMIRegionMap:
@@ -342,30 +328,30 @@ Resources:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - lambda.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Path: "/"
       Policies:
-      - PolicyName: IAMPasswordCreatorPolicy
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: 'Allow'
-            Action:
-            - 'logs:CreateLogGroup'
-            - 'logs:CreateLogStream'
-            - 'logs:PutLogEvents'
-            Resource: '*'
-          - Effect: Allow
-            Action:
-              - iam:GetAccountPasswordPolicy
-              - iam:UpdateAccountPasswordPolicy
-              - iam:DeleteAccountPasswordPolicy
-            Resource: "*"
+        - PolicyName: IAMPasswordCreatorPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - iam:GetAccountPasswordPolicy
+                  - iam:UpdateAccountPasswordPolicy
+                  - iam:DeleteAccountPasswordPolicy
+                Resource: "*"
   IamTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -458,9 +444,9 @@ Resources:
   ConfigRulesTemplate:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-    - IamTemplate
-    - ProductionVpcTemplate
-    - ManagementVpcTemplate
+      - IamTemplate
+      - ProductionVpcTemplate
+      - ManagementVpcTemplate
     Properties:
       TemplateURL:
         !Sub
@@ -504,14 +490,13 @@ Resources:
           - Outputs.rAppPrivateSubnetB
         RegionAZ1Name: !Ref AvailabilityZoneA
         RegionAZ2Name: !Ref AvailabilityZoneB
-        DBName: 'example-wordpress'
+        DBName: examplewordpress
         DBUser: !Ref DBUsername
         DBPassword: !Ref DBPassword
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
   ApplicationTemplate:
     Type: AWS::CloudFormation::Stack
-    DependsOn: ProductionVpcTemplate
     Properties:
       TemplateURL:
         !Sub
@@ -525,41 +510,20 @@ Resources:
       Parameters:
         EC2KeyPair: !Ref EC2KeyPair
         ProductionCIDR: 10.100.0.0/16
-        ProductionVPC:
-          !GetAtt
-          - ProductionVpcTemplate
-          - Outputs.rVPCProduction
-        DMZSubnetA:
-          !GetAtt
-          - ProductionVpcTemplate
-          - Outputs.rDMZSubnetA
-        DMZSubnetB:
-          !GetAtt
-          - ProductionVpcTemplate
-          - Outputs.rDMZSubnetB
-        AppPrivateSubnetA:
-          !GetAtt
-          - ProductionVpcTemplate
-          - Outputs.rAppPrivateSubnetA
-        AppPrivateSubnetB:
-          !GetAtt
-          - ProductionVpcTemplate
-          - Outputs.rAppPrivateSubnetB
+        ProductionVPC: !GetAtt ProductionVpcTemplate.Outputs.rVPCProduction
+        DMZSubnetA: !GetAtt ProductionVpcTemplate.Outputs.rDMZSubnetA
+        DMZSubnetB: !GetAtt ProductionVpcTemplate.Outputs.rDMZSubnetB
+        AppPrivateSubnetA: !GetAtt ProductionVpcTemplate.Outputs.rAppPrivateSubnetA
+        AppPrivateSubnetB: !GetAtt ProductionVpcTemplate.Outputs.rAppPrivateSubnetB
         ManagementCIDR: 10.10.0.0/16
-        RegionAZ1Name: !Ref AvailabilityZoneA
-        RegionAZ2Name: !Ref AvailabilityZoneB
-        DBClass:
-          !FindInMap
-          - Instances
-          - !Ref AWS::Region
-          - InstanceTypeDatabase
-        Environment: 'production'
-        BastionSSHCIDR: 0.0.0.0/0
-        SupportsGlacier: 'true'
-        QSS3BucketName: !Ref QSS3BucketName
-        QSS3KeyPrefix: !Ref QSS3KeyPrefix
         AvailabilityZoneA: !Ref AvailabilityZoneA
         AvailabilityZoneB: !Ref AvailabilityZoneB
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        DBHost: !GetAtt DatabaseTemplate.Outputs.AuroraClusterEndpoint
+        DBName: examplewordpress
+        DBUser: !Ref DBUsername
+        DBPassword: !Ref DBPassword
 Outputs:
   TemplateType:
     Value: Standard Architecture

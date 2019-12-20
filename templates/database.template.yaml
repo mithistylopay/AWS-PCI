@@ -15,30 +15,30 @@ Metadata:
     Description: Outputs ID of all deployed resources
   AWS::CloudFormation::Interface:
     ParameterGroups:
-    - Label:
-        default: AWS Quick Start Configuration
-      Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-    - Label:
-        default: Availability Zone Selection
-      Parameters:
-      - RegionAZ1Name
-      - RegionAZ2Name
-    - Label:
-        default: Network (existing VPC config)
-      Parameters:
-      - ProductionCIDR
-      - ProductionVPC
-      - DBPrivateSubnetA
-      - DBPrivateSubnetB
-    - Label:
-        default: Database Configuration
-      Parameters:
-      - DBName
-      - DBUser
-      - DBPassword
-      - CentralLogBucket
+      - Label:
+          default: AWS Quick Start Configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+      - Label:
+          default: Availability Zone Selection
+        Parameters:
+          - RegionAZ1Name
+          - RegionAZ2Name
+      - Label:
+          default: Network (existing VPC config)
+        Parameters:
+          - ProductionCIDR
+          - ProductionVPC
+          - DBPrivateSubnetA
+          - DBPrivateSubnetB
+      - Label:
+          default: Database Configuration
+        Parameters:
+          - DBName
+          - DBUser
+          - DBPassword
+          - CentralLogBucket
     ParameterLabels:
       RegionAZ1Name:
         default: Choose 1 of 2 Availability Zones to Deploy Aurora
@@ -86,7 +86,9 @@ Parameters:
     Description: AvailabilityZone 2
     Type: AWS::EC2::AvailabilityZone::Name
   DBName:
-    Description: Name of RDS Database
+    Description: "Name of the Amazon Aurora database."
+    MaxLength: "63"
+    MinLength: "5"
     Type: String
   DBUser:
     Description: Username of DB Instance
@@ -122,45 +124,48 @@ Conditions:
   GovCloudCondition: !Or [!Equals [!Ref "AWS::Region", 'us-gov-west-1'], !Equals [!Ref "AWS::Region", 'us-gov-east-1']]
   GovCloudEastCondition: !Equals [!Ref "AWS::Region", 'us-gov-east-1']
   GovCloudWestCondition: !Equals [!Ref "AWS::Region", 'us-gov-west-1']
+  CentralLogBucketCondition: !Not [!Equals [!Ref CentralLogBucket, '']]
 Resources:
   ProcRole:
+    Condition: CentralLogBucketCondition
     Type: 'AWS::IAM::Role'
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Principal:
-            Service: lambda.amazonaws.com
-          Action: 'sts:AssumeRole'
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 'sts:AssumeRole'
       Path: /
       Policies:
         - PolicyName: FHtransform
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-            - Effect: Allow
-              Action:
-              - logs:*
-              Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*
-            - Effect: Allow
-              Action:
-              - es:ESHttpPost
-              Resource: !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/*
-            - Effect: Allow
-              Action:
-              - s3:AbortMultipartUpload
-              - s3:GetBucketLocation
-              - s3:GetObject
-              - s3:ListBucket
-              - s3:ListBucketMultipartUploads
-              - S3:PutObject
-              Resource: !Sub arn:aws:s3:::${CentralLogBucket}
-            - Effect: Allow
-              Action:
-              - firehose:*
-              Resource: !Sub arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics
+              - Effect: Allow
+                Action:
+                  - logs:*
+                Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*
+              - Effect: Allow
+                Action:
+                  - es:ESHttpPost
+                Resource: !Sub arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/*
+              - Effect: Allow
+                Action:
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - S3:PutObject
+                Resource: !Sub arn:aws:s3:::${CentralLogBucket}
+              - Effect: Allow
+                Action:
+                  - firehose:*
+                Resource: !Sub arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics
   LambdaFirehoseProcessor:
+    Condition: CentralLogBucketCondition
     Type: 'AWS::Lambda::Function'
     Properties:
       Description: Process RDS logs from CloudWatch
@@ -186,16 +191,17 @@ Resources:
         server_audit_events: CONNECT, QUERY, TABLE
         server_audit_logs_upload: 1
   CloudWatchRole:
+    Condition: CentralLogBucketCondition
     Type: AWS::IAM::Role
     DependsOn: StreamS3only
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Effect: 'Allow'
-          Principal:
-            Service: !Sub 'logs.${AWS::Region}.amazonaws.com'
-          Action: 'sts:AssumeRole'
+          - Effect: 'Allow'
+            Principal:
+              Service: !Sub 'logs.${AWS::Region}.amazonaws.com'
+            Action: 'sts:AssumeRole'
       RoleName: CWLtoKinesisRole
       Path: /
       Policies:
@@ -206,49 +212,49 @@ Resources:
               - Sid: AllowStream
                 Effect: Allow
                 Action: firehose:*
-                Resource: !Sub arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics
+                Resource: !Sub "arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics"
               - Effect: Allow
                 Action: kinesis:*
-                Resource: !Sub arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics
+                Resource: !Sub "arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics"
               - Effect: Allow
                 Action: logs:PutSubscriptionFilter
                 Resource: '*'
               - Effect: Allow
                 Action: iam:PassRole
-                Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/CWLtoKinesisRole
+                Resource: !Sub "arn:aws:iam::${AWS::AccountId}:role/CWLtoKinesisRole"
               - Effect: Allow
                 Action:
-                - lambda:InvokeFunction
-                - lambda:GetFunctionConfiguration
+                  - lambda:InvokeFunction
+                  - lambda:GetFunctionConfiguration
                 Resource:
-                - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:%FIREHOSE_DEFAULT_FUNCTION%:%FIREHOSE_DEFAULT_VERSION%
-                - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:LambdaFirehoseProcessor
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:LambdaFirehoseProcessor"
   SubscriptionFilterAudit:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: CentralLogBucketCondition
     DependsOn:
       - StreamS3only
       - CloudWatchRole
     Properties:
-      LogGroupName: /aws/rds/cluster/my-pcicluster1/audit
+      LogGroupName: !Ref CloudWatchLogGroupS3audit
       FilterPattern: ''
-      DestinationArn: !Sub arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics
+      DestinationArn: !Sub "arn:aws:firehose:${AWS::Region}:${AWS::AccountId}:deliverystream/aws-rds-logs-analytics"
       RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/CWLtoKinesisRole
   CloudWatchLogGroupS3:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/rds/cluster/my-pcicluster1/S3
       RetentionInDays: 365
   CloudWatchLogGroupS3audit:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/rds/cluster/my-pcicluster1/audit
       RetentionInDays: 365
   CloudWatchLogStreamS3:
+    DependsOn: CloudWatchLogGroupS3
     Type: AWS::Logs::LogStream
     Properties:
       LogGroupName: !Ref CloudWatchLogGroupS3
       LogStreamName: !Sub aws-rds-s3-logs-${AWS::Region}
   StreamS3only:
+    Condition: CentralLogBucketCondition
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
       DeliveryStreamName: aws-rds-logs-analytics
@@ -274,18 +280,19 @@ Resources:
                   ParameterValue: !GetAtt LambdaFirehoseProcessor.Arn
               Type: Lambda
   FirehoseRoleS3:
+    Condition: CentralLogBucketCondition
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
-        - Effect: 'Allow'
-          Principal:
-            Service: 'firehose.amazonaws.com'
-          Action: 'sts:AssumeRole'
-          Condition:
-            StringEquals:
-              sts:ExternalId: !Sub ${AWS::AccountId}
+          - Effect: 'Allow'
+            Principal:
+              Service: 'firehose.amazonaws.com'
+            Action: 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Sub ${AWS::AccountId}
       Path: /
       Policies:
         - PolicyName: Firehose_Role_S3
@@ -297,21 +304,21 @@ Resources:
                 Resource: "*"
               - Effect: Allow
                 Action:
-                - s3:AbortMultipartUpload
-                - s3:GetBucketLocation
-                - s3:GetObject
-                - s3:ListBucket
-                - s3:PutObject
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:PutObject
                 Resource:
-                - !Sub arn:aws:s3:::${CentralLogBucket}
-                - !Sub arn:aws:s3:::${CentralLogBucket}/*
+                  - !Sub arn:aws:s3:::${CentralLogBucket}
+                  - !Sub arn:aws:s3:::${CentralLogBucket}/*
               - Effect: Allow
                 Action:
-                - lambda:InvokeFunction
-                - lambda:GetFunctionConfiguration
+                  - lambda:InvokeFunction
+                  - lambda:GetFunctionConfiguration
                 Resource:
-                - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:%FIREHOSE_DEFAULT_FUNCTION%:%FIREHOSE_DEFAULT_VERSION%
-                - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:LambdaFirehoseProcessor
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:%FIREHOSE_DEFAULT_FUNCTION%:%FIREHOSE_DEFAULT_VERSION%
+                  - !Sub arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:LambdaFirehoseProcessor
               - Effect: "Allow"
                 Action:
                   - "iam:PassRole"
@@ -326,13 +333,13 @@ Resources:
       GroupName: RDS SecurityGroup
       VpcId: !Ref ProductionVPC
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 3306
-        ToPort: 3306
-        CidrIp: !Ref ProductionCIDR
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          CidrIp: !Ref ProductionCIDR
       Tags:
-      - Key: Name
-        Value: sg-database-access
+        - Key: Name
+          Value: sg-database-access
   AuroraStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -340,9 +347,9 @@ Resources:
         - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-amazon-aurora-mysql/templates/aurora_mysql.template.yaml
         - QSS3Region:
             Fn::If:
-            - GovCloudCondition
-            - s3-us-gov-west-1
-            - s3
+              - GovCloudCondition
+              - s3-us-gov-west-1
+              - s3
       Parameters:
         Subnet1ID: !Ref DBPrivateSubnetA
         Subnet2ID: !Ref DBPrivateSubnetB
@@ -372,4 +379,3 @@ Outputs:
     Description: For assistance or questions regarding this quickstart please email
       compliance-accelerator@amazon.com
     Value: ''
-...

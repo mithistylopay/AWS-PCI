@@ -1,34 +1,26 @@
 [
     {
-        "ParameterKey": "pDBPassword",
-        "ParameterValue": "$[taskcat_genpass_28]"
+        "ParameterKey": "DBPassword",
+        "ParameterValue": "$[taskcat_genpass_16S]"
     },
     {
-        "ParameterKey": "pNotifyEmail",
-        "ParameterValue": "distlist@example.org"
-    },
-    {
-        "ParameterKey": "pEC2KeyPairBastion",
+        "ParameterKey": "EC2KeyPairBastion",
         "ParameterValue": "$[taskcat_getkeypair]"
     },
     {
-        "ParameterKey": "pEC2KeyPair",
+        "ParameterKey": "EC2KeyPair",
         "ParameterValue": "$[taskcat_getkeypair]"
     },
     {
-        "ParameterKey": "pSupportsConfig",
-        "ParameterValue": "false"
-    },
-    {
-        "ParameterKey": "pAvailabilityZoneA",
+        "ParameterKey": "AvailabilityZoneA",
         "ParameterValue": "$[taskcat_getsingleaz_1]"
     },
     {
-        "ParameterKey": "pAvailabilityZoneB",
+        "ParameterKey": "AvailabilityZoneB",
         "ParameterValue": "$[taskcat_getsingleaz_2]"
     },
     {
-        "ParameterKey": "pVPCTenancy",
+        "ParameterKey": "VPCTenancy",
         "ParameterValue": "default"
     },
     {

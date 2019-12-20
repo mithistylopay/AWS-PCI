@@ -17,45 +17,45 @@ Metadata:
     Description: Outputs ID of all deployed resources
   AWS::CloudFormation::Interface:
     ParameterGroups:
-    - Label:
-        default: Region Config
-      Parameters:
-      - AvailabilityZoneA
-      - AvailabilityZoneB
-    - Label:
-        default: Network (existing VPC config)
-      Parameters:
-      - ManagementCIDR
-      - ProductionCIDR
-      - ProductionVPC
-      - DMZSubnetA
-      - DMZSubnetB
-      - AppPrivateSubnetA
-      - AppPrivateSubnetB
-    - Label:
-        default: AWS Quick Start Configuration
-      Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-    - Label:
-        default: Database Configuration
-      Parameters:
-        - DBName
-        - DBUser
-        - DBPassword
-    - Label:
-        default: Logging configuration
-      Parameters:
-        - CentralLogBucket
-        - WAFLogging
-    - Label:
-        default: ElasticSearch Configuration
-      Parameters:
-        - ESClusterARN
-    - Label:
-        default: EC2 Configuration
-      Parameters:
-        - EC2KeyPair
+      - Label:
+          default: Region Config
+        Parameters:
+          - AvailabilityZoneA
+          - AvailabilityZoneB
+      - Label:
+          default: Network (existing VPC config)
+        Parameters:
+          - ManagementCIDR
+          - ProductionCIDR
+          - ProductionVPC
+          - DMZSubnetA
+          - DMZSubnetB
+          - AppPrivateSubnetA
+          - AppPrivateSubnetB
+      - Label:
+          default: AWS Quick Start Configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+      - Label:
+          default: Database Configuration
+        Parameters:
+          - DBName
+          - DBUser
+          - DBPassword
+      - Label:
+          default: Logging configuration
+        Parameters:
+          - CentralLogBucket
+          - WAFLogging
+      - Label:
+          default: ElasticSearch Configuration
+        Parameters:
+          - ESClusterARN
+      - Label:
+          default: EC2 Configuration
+        Parameters:
+          - EC2KeyPair
     ParameterLabels:
       ProductionCIDR:
         default: CIDR Range of VPC
@@ -168,6 +168,16 @@ Parameters:
   DBHost:
     Description: RDS MySQL Endpoint
     Type: String
+  DBName:
+    Description: Name of RDS Database
+    Type: String
+  DBUser:
+    Description: Username of DB Instance
+    Type: String
+  DBPassword:
+    Description: Password of DB Instance
+    Type: String
+    NoEcho: True
 Mappings:
   Instances:
     ap-northeast-1:
@@ -249,7 +259,7 @@ Mappings:
     us-west-2:
       AMZNLINUXHVM: ami-082b5a644766e0e6f
 Conditions:
-  GovCloudCondition: !Or [ !Equals [ !Ref "AWS::Region", us-gov-west-1], !Equals [ !Ref "AWS::Region", us-gov-east-1]]
+  GovCloudCondition: !Or [!Equals [!Ref "AWS::Region", us-gov-west-1], !Equals [!Ref "AWS::Region", us-gov-east-1]]
 Resources:
   SecurityGroupWeb:
     Type: AWS::EC2::SecurityGroup
@@ -257,88 +267,88 @@ Resources:
       GroupDescription: Security group for Reverse Proxy in DMZ
       VpcId: !Ref ProductionVPC
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: 0.0.0.0/0
-      - IpProtocol: tcp
-        FromPort: 80
-        ToPort: 80
-        CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
       Tags:
-      - Key: Name
-        Value: sg-reverse-proxy-dmz
+        - Key: Name
+          Value: sg-reverse-proxy-dmz
   SecurityGroupWebInstance:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for Reverse Proxy Instances in DMZ
       VpcId: !Ref ProductionVPC
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: !Ref ProductionCIDR
-      - IpProtocol: tcp
-        FromPort: 80
-        ToPort: 80
-        CidrIp: !Ref ProductionCIDR
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
-        CidrIp: !Ref ManagementCIDR
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref ProductionCIDR
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref ProductionCIDR
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref ManagementCIDR
       Tags:
-      - Key: Name
-        Value: sg-reverse-proxy-dmz-instances
+        - Key: Name
+          Value: sg-reverse-proxy-dmz-instances
   SecurityGroupApp:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for Appservers ELB
       VpcId: !Ref ProductionVPC
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: !Ref ProductionCIDR
-      - IpProtocol: tcp
-        FromPort: 80
-        ToPort: 80
-        CidrIp: !Ref ProductionCIDR
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref ProductionCIDR
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref ProductionCIDR
       Tags:
-      - Key: Name
-        Value: sg-app-server-elb
+        - Key: Name
+          Value: sg-app-server-elb
   SecurityGroupAppInstance:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Security group for Appserver Instances
       VpcId: !Ref ProductionVPC
       SecurityGroupIngress:
-      - IpProtocol: tcp
-        FromPort: 443
-        ToPort: 443
-        CidrIp: !Ref ProductionCIDR
-      - IpProtocol: tcp
-        FromPort: 80
-        ToPort: 80
-        CidrIp: !Ref ProductionCIDR
-      - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
-        CidrIp: !Ref ManagementCIDR
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref ProductionCIDR
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref ProductionCIDR
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref ManagementCIDR
       Tags:
-      - Key: Name
-        Value: sg-app-server-elb-instances
+        - Key: Name
+          Value: sg-app-server-elb-instances
   WebContentBucket:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
       LifecycleConfiguration:
         Rules:
-        - Id: Transition90daysRetain7yrs
-          Status: Enabled
-          ExpirationInDays: 2555
-          Transition:
-            TransitionInDays: 90
-            StorageClass: STANDARD_IA
+          - Id: Transition90daysRetain7yrs
+            Status: Enabled
+            ExpirationInDays: 2555
+            Transition:
+              TransitionInDays: 90
+              StorageClass: STANDARD_IA
       VersioningConfiguration:
         Status: Enabled
     DeletionPolicy: Delete
@@ -348,125 +358,125 @@ Resources:
       Bucket: !Ref WebContentBucket
       PolicyDocument:
         Statement:
-        - Sid: EnforceSecureTransport
-          Action: s3:*
-          Effect: Deny
-          Principal: '*'
-          Resource:
-            !Sub
-            - arn:${Partition}:s3:::${WebContentBucket}
-            - Partition:
-                !If
-                - GovCloudCondition
-                - aws-us-gov
-                - aws
-          Condition:
-            Bool:
-              aws:SecureTransport: 'false'
-        - Sid: EnforceEncryptionOnPut
-          Effect: Deny
-          Principal: '*'
-          Action: s3:PutObject
-          Resource:
-            !Sub
-            - arn:${Partition}:s3:::${WebContentBucket}/*
-            - Partition:
-                !If
-                - GovCloudCondition
-                - aws-us-gov
-                - aws
-          Condition:
-            StringNotEquals:
-              s3:x-amz-server-side-encryption: AES256
+          - Sid: EnforceSecureTransport
+            Action: s3:*
+            Effect: Deny
+            Principal: '*'
+            Resource:
+              !Sub
+              - arn:${Partition}:s3:::${WebContentBucket}
+              - Partition:
+                  !If
+                  - GovCloudCondition
+                  - aws-us-gov
+                  - aws
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+          - Sid: EnforceEncryptionOnPut
+            Effect: Deny
+            Principal: '*'
+            Action: s3:PutObject
+            Resource:
+              !Sub
+              - arn:${Partition}:s3:::${WebContentBucket}/*
+              - Partition:
+                  !If
+                  - GovCloudCondition
+                  - aws-us-gov
+                  - aws
+            Condition:
+              StringNotEquals:
+                s3:x-amz-server-side-encryption: AES256
   ELBApp:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Subnets:
-      - !Ref AppPrivateSubnetA
-      - !Ref AppPrivateSubnetB
+        - !Ref AppPrivateSubnetA
+        - !Ref AppPrivateSubnetB
       SecurityGroups:
-      - !Ref SecurityGroupApp
+        - !Ref SecurityGroupApp
       Scheme: internal
       Type: application
       Tags:
-      - Key: Name
-        Value: ProxyELB
+        - Key: Name
+          Value: ProxyELB
   ELBappHTTPlistener:
-   Type: "AWS::ElasticLoadBalancingV2::Listener"
-   Properties:
-    DefaultActions:
-      - Type: "redirect"
-        RedirectConfig:
-          Protocol: "HTTPS"
-          Port: "443"
-          Host: "#{host}"
-          Path: "/#{path}"
-          Query: "#{query}"
-          StatusCode: "HTTP_301"
-    Port: 80
-    Protocol: "HTTP"
-    LoadBalancerArn: !Ref ELBApp
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      Port: 80
+      Protocol: "HTTP"
+      LoadBalancerArn: !Ref ELBApp
+      DefaultActions:
+        - Type: "redirect"
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: "443"
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
   ELBWeb:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
       Subnets:
-      - !Ref DMZSubnetA
-      - !Ref DMZSubnetB
+        - !Ref DMZSubnetA
+        - !Ref DMZSubnetB
       SecurityGroups:
-      - !Ref SecurityGroupWeb
+        - !Ref SecurityGroupWeb
       Type: application
       Tags:
-      - Key: Name
-        Value: Proxy ELB
+        - Key: Name
+          Value: Proxy ELB
   ELBwebHTTPlistener:
-   Type: "AWS::ElasticLoadBalancingV2::Listener"
-   Properties:
-    DefaultActions:
-      - Type: "redirect"
-        RedirectConfig:
-          Protocol: "HTTPS"
-          Port: "443"
-          Host: "#{host}"
-          Path: "/#{path}"
-          Query: "#{query}"
-          StatusCode: "HTTP_301"
-    Port: 80
-    Protocol: "HTTP"
-    LoadBalancerArn: !Ref ELBWeb
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      Port: 80
+      Protocol: "HTTP"
+      LoadBalancerArn: !Ref ELBWeb
+      DefaultActions:
+        - Type: "redirect"
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: "443"
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
   WebInstanceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ec2.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Path: /
       Policies:
-      - PolicyName: S3Assets
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-          - Sid: DescribeVolumes
-            Effect: Allow
-            Action:
-            - ec2:DescribeVolumes
-            Resource: "*"
+        - PolicyName: S3Assets
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: DescribeVolumes
+                Effect: Allow
+                Action:
+                  - ec2:DescribeVolumes
+                Resource: "*"
   WebInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
-      - !Ref WebInstanceRole
+        - !Ref WebInstanceRole
   AutoScalingConfigWeb:
     Type: AWS::AutoScaling::LaunchConfiguration
     DependsOn:
-    - ELBApp
-    - AutoScalingGroupApp
+      - ELBApp
+      - AutoScalingGroupApp
     Metadata:
       AWS::CloudFormation::Init:
         config:
@@ -508,30 +518,30 @@ Resources:
                 enabled: true
                 ensureRunning: true
                 files:
-                - /etc/nginx/conf.d/default.conf
+                  - /etc/nginx/conf.d/default.conf
 
     Properties:
       AssociatePublicIpAddress: true
       ImageId:
         !FindInMap
-           - AWSAMIRegionMap
-           - !Ref AWS::Region
-           - AMZNLINUXHVM
+        - AWSAMIRegionMap
+        - !Ref AWS::Region
+        - AMZNLINUXHVM
       IamInstanceProfile: !Ref WebInstanceProfile
       InstanceType:
         !FindInMap
-           - Instances
-           - !Ref AWS::Region
-           - InstanceType
+        - Instances
+        - !Ref AWS::Region
+        - InstanceType
       BlockDeviceMappings:
-      - DeviceName: /dev/sdh
-        Ebs:
-          VolumeSize: 50
-          VolumeType: gp2
-          Encrypted: true
+        - DeviceName: /dev/sdh
+          Ebs:
+            VolumeSize: 50
+            VolumeType: gp2
+            Encrypted: true
       KeyName: !Ref EC2KeyPair
       SecurityGroups:
-      - !Ref SecurityGroupWebInstance
+        - !Ref SecurityGroupWebInstance
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
@@ -587,22 +597,22 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AvailabilityZones:
-      - !Ref AvailabilityZoneA
-      - !Ref AvailabilityZoneB
+        - !Ref AvailabilityZoneA
+        - !Ref AvailabilityZoneB
       VPCZoneIdentifier:
-      - !Ref DMZSubnetA
-      - !Ref DMZSubnetB
+        - !Ref DMZSubnetA
+        - !Ref DMZSubnetB
       LaunchConfigurationName: !Ref AutoScalingConfigWeb
       MinSize: "2"
       MaxSize: "4"
       TargetGroupARNs:
-      - !Ref WebTargetGroup
+        - !Ref WebTargetGroup
       HealthCheckType: ELB
       HealthCheckGracePeriod: 300
       Tags:
-      - Key: Name
-        Value: Proxy Server
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: Proxy Server
+          PropagateAtLaunch: true
   AutoScalingUpWeb:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
@@ -623,37 +633,37 @@ Resources:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ec2.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Path: /
       Policies:
-      - PolicyName: S3Assets
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-          - Sid: DescribeVolumes
-            Effect: Allow
-            Action:
-            - ec2:DescribeVolumes
-            Resource: "*"
+        - PolicyName: S3Assets
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: DescribeVolumes
+                Effect: Allow
+                Action:
+                  - ec2:DescribeVolumes
+                Resource: "*"
   AppInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
-      - !Ref AppInstanceRole
+        - !Ref AppInstanceRole
   AutoScalingConfigApp:
     Type: AWS::AutoScaling::LaunchConfiguration
     Metadata:
       AWS::CloudFormation::Init:
         configSets:
           wordpress_install:
-          - install_cfn
-          - install_wordpress
+            - install_cfn
+            - install_wordpress
         install_cfn:
           files:
             /etc/cfn/cfn-hup.conf:
@@ -679,8 +689,8 @@ Resources:
                 enabled: true
                 ensureRunning: true
                 files:
-                - /etc/cfn/cfn-hup.conf
-                - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
         install_wordpress:
           sources:
             /var/www/html: https://wordpress.org/latest.tar.gz
@@ -770,24 +780,24 @@ Resources:
     Properties:
       ImageId:
         !FindInMap
-           - AWSAMIRegionMap
-           - !Ref AWS::Region
-           - AMZNLINUXHVM
+        - AWSAMIRegionMap
+        - !Ref AWS::Region
+        - AMZNLINUXHVM
       IamInstanceProfile: !Ref AppInstanceProfile
       InstanceType:
         !FindInMap
-           - Instances
-           - !Ref AWS::Region
-           - InstanceType
+        - Instances
+        - !Ref AWS::Region
+        - InstanceType
       BlockDeviceMappings:
-      - DeviceName: /dev/sdh
-        Ebs:
-          VolumeSize: 50
-          VolumeType: gp2
-          Encrypted: true
+        - DeviceName: /dev/sdh
+          Ebs:
+            VolumeSize: 50
+            VolumeType: gp2
+            Encrypted: true
       KeyName: !Ref EC2KeyPair
       SecurityGroups:
-      - !Ref SecurityGroupAppInstance
+        - !Ref SecurityGroupAppInstance
       UserData:
         Fn::Base64: |
             #!/bin/bash -x
@@ -868,11 +878,11 @@ Resources:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AvailabilityZones:
-      - !Ref AvailabilityZoneA
-      - !Ref AvailabilityZoneB
+        - !Ref AvailabilityZoneA
+        - !Ref AvailabilityZoneB
       VPCZoneIdentifier:
-      - !Ref AppPrivateSubnetA
-      - !Ref AppPrivateSubnetB
+        - !Ref AppPrivateSubnetA
+        - !Ref AppPrivateSubnetB
       LaunchConfigurationName: !Ref AutoScalingConfigApp
       MinSize: "2"
       MaxSize: "4"
@@ -881,9 +891,9 @@ Resources:
       HealthCheckType: ELB
       HealthCheckGracePeriod: 300
       Tags:
-      - Key: Name
-        Value: AppServer
-        PropagateAtLaunch: true
+        - Key: Name
+          Value: AppServer
+          PropagateAtLaunch: true
   AutoScalingDownApp:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
@@ -904,80 +914,80 @@ Resources:
       TemplateURL: !Sub "https://${QSS3BucketName}.s3.amazonaws.com/${QSS3KeyPrefix}templates/waf_owasp.template.yaml"
       TimeoutInMinutes: 20
       Parameters:
-        ELBWeb: !Ref ELBWeb
-        ESClusterARN: !Ref ESClusterARN
-        CentralLogBucket: !Ref CentralLogBucket
-        WAFLogging: !Ref WAFlogging
+        pELBWeb: !Ref ELBWeb
+        pESClusterARN: !Ref ESClusterARN
+        pCentralLogBucket: !Ref CentralLogBucket
+        pWAFLogging: !Ref WAFlogging
   PostProcInstanceRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ec2.amazonaws.com
-            - waf-regional.amazonaws.com
-          Action:
-          - sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+                - waf-regional.amazonaws.com
+            Action:
+              - sts:AssumeRole
       Path: /
       Policies:
-      - PolicyName: PostProcPermissions
-        PolicyDocument:
-          Version: 2012-10-17
-          Statement:
-            - Sid: UploadServerCertificate
-              Effect: Allow
-              Action:
-                - iam:ListServerCertificates
-                - iam:UploadServerCertificate
-                - iam:CreateServiceLinkedRole
-              Resource: "*"
-            - Sid: CreateLoadBalancerListener
-              Effect: Allow
-              Action:
-                - elasticloadbalancing:*
-              Resource: "*"
-            - Sid: SelfDestruct
-              Effect: Allow
-              Action:
-                - ec2:TerminateInstances
-              Resource: "*"
-            - Sid: WAFListACL
-              Effect: Allow
-              Action:
-                - waf-regional:ListWebACLs
-                - waf-regional:ListLoggingConfigurations
-                - waf-regional:PutLoggingConfiguration
-              Resource: "*"
+        - PolicyName: PostProcPermissions
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: UploadServerCertificate
+                Effect: Allow
+                Action:
+                  - iam:ListServerCertificates
+                  - iam:UploadServerCertificate
+                  - iam:CreateServiceLinkedRole
+                Resource: "*"
+              - Sid: CreateLoadBalancerListener
+                Effect: Allow
+                Action:
+                  - elasticloadbalancing:*
+                Resource: "*"
+              - Sid: SelfDestruct
+                Effect: Allow
+                Action:
+                  - ec2:TerminateInstances
+                Resource: "*"
+              - Sid: WAFListACL
+                Effect: Allow
+                Action:
+                  - waf-regional:ListWebACLs
+                  - waf-regional:ListLoggingConfigurations
+                  - waf-regional:PutLoggingConfiguration
+                Resource: "*"
   PostProcInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
       Path: /
       Roles:
-      - !Ref PostProcInstanceRole
+        - !Ref PostProcInstanceRole
   PostProcInstance:
     Type: AWS::EC2::Instance
     DependsOn:
-    - AutoScalingGroupApp
-    - AutoScalingGroupWeb
+      - AutoScalingGroupApp
+      - AutoScalingGroupWeb
     Properties:
       ImageId:
         !FindInMap
-           - AWSAMIRegionMap
-           - !Ref AWS::Region
-           - AMZNLINUXHVM
+        - AWSAMIRegionMap
+        - !Ref AWS::Region
+        - AMZNLINUXHVM
       InstanceType:
         !FindInMap
-           - Instances
-           - !Ref AWS::Region
-           - InstanceType
+        - Instances
+        - !Ref AWS::Region
+        - InstanceType
       IamInstanceProfile: !Ref PostProcInstanceProfile
       SubnetId: !Ref AppPrivateSubnetA
       KeyName: !Ref EC2KeyPair
       SecurityGroupIds:
-      - !Ref SecurityGroupAppInstance
+        - !Ref SecurityGroupAppInstance
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
@@ -1024,8 +1034,8 @@ Resources:
           echo *** ELB HTTPS configuration complete ***
 
       Tags:
-      - Key: Name
-        Value: PostProcessor
+        - Key: Name
+          Value: PostProcessor
 Outputs:
   LandingPageURL:
     Value: !Sub https://${ELBWeb.DNSName}/landing.html
