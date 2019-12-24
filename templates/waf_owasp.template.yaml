@@ -168,6 +168,12 @@ Metadata:
 Conditions:
   isElastic: !Equals [ !Ref pWAFLogging, Amazon Elasticsearch_S3 ]
   isCentralOnly: !Equals [ !Ref pWAFLogging, Amazon S3 Only ]
+  CentralLoggingCondition: !Not [!Equals [!Ref pCentralLogBucket, '']]
+  isElasticAndCentral:
+    Fn::And:
+      - {"Condition":"isElastic"}
+      - {"Condition":"CentralLoggingCondition"}
+
 
 ## ::RESOURCES::
 ## Resources used in this solution
@@ -177,31 +183,31 @@ Resources:
     Type: AWS::Logs::LogGroup
     Condition: isElastic
     Properties:
-      LogGroupName: AWS_WAF_ES
       RetentionInDays: 365
 
   CloudWatchLogStreamES:
+    DependsOn: CloudWatchLogGroupES
     Type: AWS::Logs::LogStream
     Condition: isElastic
     Properties:
-      LogGroupName: AWS_WAF_ES
+      LogGroupName: !Ref CloudWatchLogGroupES
       LogStreamName: !Sub AWS_WAF_ES_${AWS::Region}
 
   CloudWatchLogGroupS3:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: AWS_WAF_S3
       RetentionInDays: 365
 
   CloudWatchLogStreamS3:
+    DependsOn: CloudWatchLogGroupS3
     Type: AWS::Logs::LogStream
     Properties:
-      LogGroupName: AWS_WAF_S3
+      LogGroupName: !Ref CloudWatchLogGroupS3
       LogStreamName: !Sub AWS_WAF_S3_${AWS::Region}
 
   FirehoseStream:
     Type: AWS::KinesisFirehose::DeliveryStream
-    Condition: isElastic
+    Condition: isElasticAndCentral
     Properties:
       DeliveryStreamName: aws-waf-logs-analytics
       DeliveryStreamType: DirectPut
@@ -237,7 +243,7 @@ Resources:
 
   StreamS3only:
     Type: AWS::KinesisFirehose::DeliveryStream
-    Condition: isCentralOnly
+    Condition: CentralLoggingCondition
     Properties:
       DeliveryStreamName: aws-waf-logs-analytics
       DeliveryStreamType: DirectPut
@@ -257,7 +263,7 @@ Resources:
 
   rFirehoseRoleS3:
     Type: AWS::IAM::Role
-    Condition: isCentralOnly
+    Condition: CentralLoggingCondition
     Properties:
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
@@ -302,7 +308,7 @@ Resources:
 
   rFirehoseRoleES:
     Type: AWS::IAM::Role
-    Condition: isElastic
+    Condition: isElasticAndCentral
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17

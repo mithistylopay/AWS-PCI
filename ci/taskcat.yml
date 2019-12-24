@@ -19,5 +19,7 @@ global:
   reporting: true
 tests:
   compl-pci:
+    regions:
+      - us-east-1
     parameter_input: defaults.json
-    template_file: main.template
+    template_file: main.template.yaml
