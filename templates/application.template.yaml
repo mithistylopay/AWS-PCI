@@ -18,12 +18,12 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: Region Config
+        default: Availability Zone selection
       Parameters:
       - AvailabilityZoneA
       - AvailabilityZoneB
     - Label:
-        default: Network (existing VPC config)
+        default: Network configuration
       Parameters:
       - ManagementCIDR
       - ProductionCIDR
@@ -33,118 +33,118 @@ Metadata:
       - AppPrivateSubnetA
       - AppPrivateSubnetB
     - Label:
-        default: AWS Quick Start Configuration
-      Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-    - Label:
-        default: Database Configuration
-      Parameters:
-        - DBName
-        - DBUser
-        - DBPassword
-    - Label:
         default: Logging configuration
       Parameters:
         - CentralLogBucket
         - WAFLogging
     - Label:
-        default: ElasticSearch Configuration
+        default: Amazon Elasticsearch configuration
       Parameters:
         - ESClusterARN
     - Label:
-        default: EC2 Configuration
+        default: Amazon EC2 configuration
       Parameters:
         - EC2KeyPair
+    - Label:
+        default: Database configuration
+      Parameters:
+        - DBName
+        - DBUser
+        - DBPassword
+    - Label:
+        default: AWS Quick Start configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3KeyPrefix
     ParameterLabels:
       ProductionCIDR:
-        default: CIDR Range of VPC
+        default: Production VPC CIDR
       ProductionVPC:
-        default: CIDR Range of VPC
+        default: Production VPC ID
       DMZSubnetA:
-        default: Choose 1 of 2 Subnets for Proxy Server
+        default: First public subnet ID
       DMZSubnetB:
-        default: Choose 2 of 2 Subnets for Proxy Server
+        default: Second public subnet ID
       AppPrivateSubnetA:
-        default: Choose 1 of 2 Subnets for App Server
+        default: First private subnet ID
       AppPrivateSubnetB:
-        default: Choose 2 of 2 Subnets for App Server
+        default: Second private subnet ID
       AvailabilityZoneA:
-        default: Choose 1 of 2 Availability Zones for deployment
+        default: First Availability Zone for deployment
       AvailabilityZoneB:
-        default: Choose 2 of 2 Availability Zones for deployment
+        default: Second Availability Zone for deployment
       ESClusterARN:
-        default: Amazon ElasticSearch Cluster
+        default: Amazon ES cluster
       EC2KeyPair:
-        default: EC2 Key Pair for Deployed Resources
+        default: Existing SSH key
       ManagementCIDR:
-        default: CIDR Range or IP to Allow Access to the Web/Application Servers
+        default: Management VPC CIDR
       CentralLogBucket:
-        default: Centralized Logging Bucket to Store AWS WAF Logs
+        default: Centralized logging bucket for AWS WAF logs
       WAFlogging:
-        default: Choose to Send Logs to Amazon S3 or Amazon S3 and Amazon ElasticSearch
+        default: Log storage location
       QSS3BucketName:
         default: Quick Start S3 bucket name
       QSS3KeyPrefix:
         default: Quick Start S3 key prefix
       DBHost:
-        default: Aurora Database Host
+        default: Aurora database host
       DBName:
-        default: Aurora Database Name
+        default: Aurora database name
       DBUser:
-        default: Aurora Database User
+        default: Aurora database user
       DBPassword:
-        default: Aurora Database Password
+        default: Aurora database password
 Parameters:
   WAFlogging:
     Type: String
-    Description: You can deploy this stack to have WAF logs streamed to Amazon ES (current region) and your centralized log bucket or just log to Amazon S3.
+    Description: The storage location for AWS WAF logs. Choose Amazon Elasticsearch_S3 to have AWS WAF logs streamed to Amazon ES (current Region) and your central logging bucket.
     AllowedValues:
       - Amazon Elasticsearch_S3
       - Amazon S3 Only
     Default: Amazon S3 Only
   ESClusterARN:
     Type: String
-    Description: (If Amazon ElasticSearch_S3 is chosen) The Amazon Resource Name (ARN) of the Amazon Elasticsearch domain that Kinesis Data Firehose delivers data to. Must be in same account/region.
+    Description: (If Amazon Elasticsearch_S3 is chosen for the WAFlogging parameter) The Amazon Resource Name (ARN) of the Amazon ES domain that Kinesis Data Firehose delivers data to. Cluster must be in same account and Region.
     Default: ''
   CentralLogBucket:
     Type: String
-    Description: The Amazon S3 bucket to send AWS WAF logs. This bucket should already exist.
+    Description: The S3 bucket to send AWS WAF logs to. This bucket should already exist and can be same bucket from the centralized logging template.
     Default: ''
   EC2KeyPair:
     Description: The SSH key pair in your account to use for all other EC2 instance
-      logins
+      logins.
     Type: AWS::EC2::KeyPair::KeyName
   ProductionCIDR:
-    Description: Production VPC CIDR
+    Description: VPC CIDR for web application deployment. Can be production VPC CIDR from the main template.
     Type: String
     Default: 10.100.0.0/16
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
   ManagementCIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$
-    Description: Management VPC CIDR
+    Description: CIDR range or IP address  to allow access to the web application servers.
     Type: String
     Default: 10.10.0.0/16
   ProductionVPC:
-    Description: Production VPC
+    Description: ID of the Production VPC, where the web application architecture will be deployed.
     Type: AWS::EC2::VPC::Id
   AvailabilityZoneA:
-    Description: AvailabilityZone 1
+    Description: The name of the first Availability Zone where you will deploy the the web application architecture.
     Type: AWS::EC2::AvailabilityZone::Name
   AvailabilityZoneB:
-    Description: AvailabilityZone 2
+    Description: The name of the second Availability Zone where you will deploy the web application architecture.
     Type: AWS::EC2::AvailabilityZone::Name
   DMZSubnetA:
-    Description: DMZ Subnet A
+    Description: The ID of the first public subnet where the proxy servers will be deployed in the Production VPC.
     Type: AWS::EC2::Subnet::Id
   DMZSubnetB:
-    Description: DMZ Subnet B
+    Description: The ID of the second public subnet where the proxy servers will be deployed in the Production VPC.
     Type: AWS::EC2::Subnet::Id
   AppPrivateSubnetA:
-    Description: WebApp Subnet A
+    Description: The ID of the first private subnet where the application servers will be deployed in the Production VPC.
     Type: AWS::EC2::Subnet::Id
   AppPrivateSubnetB:
-    Description: WebApp Subnet B
+    Description: The ID of the second private subnet where the application servers will be deployed in the Production VPC.
     Type: AWS::EC2::Subnet::Id
   QSS3BucketName:
     AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
@@ -166,7 +166,7 @@ Parameters:
       forward slash (/).
     Type: String
   DBHost:
-    Description: RDS MySQL Endpoint
+    Description: Amazon RDS MySQL endpoint
     Type: String
 Mappings:
   Instances:
