@@ -12,16 +12,16 @@ Parameters:
     Type: String
     Default: esdomainadmin@example.com
     AllowedPattern: '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
-    Description: E-mail address of the Elasticsearch admin and for Alerts
+    Description: E-mail address of the administrator for the Amazon ES domain. Alerts will be sent to this email address.
   # Email address for Cognito Admin user
   CognitoAdminEmail:
     Type: String
     Default: cognitoadmin@example.com
     AllowedPattern: '^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$'
-    Description: E-mail address of the Cognito admin
+    Description: Email address of the Amazon Cognito admin.
   # ES cluster size
   ClusterSize:
-    Description: Amazon ES cluster size; small (4 data nodes), medium (6 data nodes), large (8 data nodes), xLarge (10 data nodes)
+    Description: Amazon ES cluster size. Choose Small (4 data nodes), Medium (6 data nodes), Large (8 data nodes), xLarge (10 data nodes).
     Type: String
     Default: Small
     AllowedValues:
@@ -30,32 +30,32 @@ Parameters:
     - Large
     - xLarge
   BucketName:
-    Description: This will create a new S3 Bucket for logging CloudTrail events. Name must be a globally unique value and must be in lowercase.
+    Description: The name of a new S3 bucket for logging CloudTrail events. The name must be a globally unique value and must be in lowercase letters.
     Type: String
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
   #Additional accounts which would use the same ES
   ProdAccount:
-    Description: "Additional account ID which you want to allow for centralized logging (ex: Production). Leave blank if none."
+    Description: "Additional account ID for which you want to allow for centralized logging (e.g., Production). Leave blank if none."
     Type: String
     AllowedPattern: "(|\\d{12})"
     ConstraintDescription: AWS accounts are 12 digits long. Enter 12 digits or leave blank.
   TestAccount:
-    Description: "Additional account ID which you want to allow for centralized logging (ex: Test). Leave blank if none."
+    Description: "Additional account ID for which you want to allow for centralized logging (e.g., Test). Leave blank if none."
     Type: String
     AllowedPattern: "(|\\d{12})"
     ConstraintDescription: AWS accounts are 12 digits long. Enter 12 digits or leave blank.
   DevAccount:
-    Description: "Additional account ID which you want to allow for centralized logging (ex: Development). Leave blank if none."
+    Description: "Additional account ID for which you want to allow centralized logging (e.g., Develop). Leave blank if none."
     Type: String
     AllowedPattern: "(|\\d{12}I5)"
     ConstraintDescription: AWS accounts are 12 digits long. Enter 12 digits or leave blank.
   RequiredTagKey:
-    Description: Tag key to check for with EC2/EBS REQUIRED_TAGS rule (optional, leave
+    Description: Tag key to use with the EC2/EBS REQUIRED_TAGS rule (optional, leave
       blank to ignore or if you are not deploying config)
     Type: String
   DeployConfigRule:
     Type: String
-    Description: Do you want to deploy AWS Config and did you setup a configuration recorder in the pre deployment steps?
+    Description: Deployment of AWS Config. Choose Yes Config to deploy AWS Config. This requires that you set up a configuration recorder in the pre-deployment steps.
     AllowedValues:
       - Yes Config
       - No Config
@@ -83,7 +83,7 @@ Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: Elasticsearch Configuration
+        default: Amazon Elasticsearch configuration
       Parameters:
       - DOMAINNAME
       - DomainAdminEmail
@@ -92,16 +92,11 @@ Metadata:
       - TestAccount
       - DevAccount
     - Label:
-        default: AWS Quick Start Configuration
-      Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-    - Label:
-        default: Cognito Configuration
+        default: Amazon Cognito configuration
       Parameters:
       - CognitoAdminEmail
     - Label:
-        default: S3 Central Logging Bucket Name
+        default: Central logging S3 bucket name
       Parameters:
       - BucketName
     - Label:
@@ -109,31 +104,36 @@ Metadata:
       Parameters:
       - DeployConfigRule
       - RequiredTagKey
+    - Label:
+        default: AWS Quick Start configuration
+      Parameters:
+      - QSS3BucketName
+      - QSS3KeyPrefix
     ParameterLabels:
       CognitoAdminEmail:
-        default: Cognito Admin email address
+        default: Amazon Cognito admin email address
       DomainAdminEmail:
-        default: Elasticsearch Domain Admin email address
+        default: Amazon ES domain admin email address
       DOMAINNAME:
-        default: Elasticsearch Domain name
+        default: Amazon ES domain name
       ClusterSize:
-        default: Cluster Size
+        default: Cluster size
       BucketName:
-        default: S3 Bucket Name for CloudTrail logging
+        default: S3 bucket name for CloudTrail logging
       ProdAccount:
-        default: Additional Log Account
+        default: Additional log account
       TestAccount:
-        default: Additional Log Account
+        default: Additional log account
       DevAccount:
-        default: Additional Log Account
+        default: Additional log account
       DeployConfigRule:
-        default: Deploy AWS Config
+        default: AWS Config
       RequiredTagKey:
-        default: Required Tag Key
+        default: Required tag key
       QSS3BucketName:
-        default: Quick Start S3 Bucket Name
+        default: Quick Start S3 bucket name
       QSS3KeyPrefix:
-        default: Quick Start S3 Key Prefix
+        default: Quick Start S3 key prefix
 Mappings:
   InstanceMap:
     send-data: {"SendAnonymousData": "Yes"}
