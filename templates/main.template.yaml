@@ -1,0 +1,537 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Provides nesting for required stacks to deploy a baseline architecure to support PCI compliance.
+Metadata:
+  Stack:
+    Value: 0
+  VersionDate:
+    Value: 20190805
+  Identifier:
+    Value: main
+  Input:
+    Description: Input of all required parameters in nested stacks
+  Output:
+    Description: N/A
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: 'VPC Configuration'
+        Parameters:
+          - VPCTenancy
+          - AvailabilityZoneA
+          - AvailabilityZoneB
+      - Label:
+          default: "EC2 Configuration"
+        Parameters:
+          - EC2KeyPairBastion
+          - EC2KeyPair
+      - Label:
+          default: AWS Quick Start Configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+      - Label:
+          default: IAM Password Policy
+        Parameters:
+          - MaxPasswordAge
+          - MinPasswordLength
+          - PasswordHistory
+          - RequireLowercaseChars
+          - RequireNumbers
+          - RequireSymbols
+          - RequireUppercaseChars
+      - Label:
+          default: Database configuration
+        Parameters:
+          - DBUsername
+          - DBPassword
+    ParameterLabels:
+      EC2KeyPairBastion:
+        default: Existing SSH Key for the Bastion Instance. This should have been created in the pre-deployment steps.
+      EC2KeyPair:
+        default: Existing SSH Key for Other Instances. This should have been created in the pre-deployment steps.
+      AvailabilityZoneA:
+        default: First Availability Zone
+      AvailabilityZoneB:
+        default: Second Availability zone
+      VPCTenancy:
+        default: Instance tenancy
+      QSS3BucketName:
+        default: Quick Start S3 Bucket Name
+      QSS3KeyPrefix:
+        default: Quick Start S3 Key Prefix
+      MaxPasswordAge:
+        default: Max Password Age
+      MinPasswordLength:
+        default: Minimum Password Length
+      PasswordHistory:
+        default: Maximum Password Age (days)
+      RequireLowercaseChars:
+        default: Require Lowercase Characters
+      RequireNumbers:
+        default: Require Numbers
+      RequireSymbols:
+        default: Require Symbols
+      RequireUppercaseChars:
+        default: Require Uppercase Characters
+      DBUsername:
+        default: Database Username
+      DBPassword:
+        default: Database Password
+
+Parameters:
+  EC2KeyPairBastion:
+    Description: The SSH key pair in your account to use for the bastion host login
+    Type: AWS::EC2::KeyPair::KeyName
+  EC2KeyPair:
+    Description: The SSH key pair in your account to use for all other EC2 instance
+      logins
+    Type: AWS::EC2::KeyPair::KeyName
+  AvailabilityZoneA:
+    Description: Availability Zone 1
+    Type: AWS::EC2::AvailabilityZone::Name
+  AvailabilityZoneB:
+    Description: Availability Zone 2. NOTE - This should be different than the AZ above.
+    Type: AWS::EC2::AvailabilityZone::Name
+  MaxPasswordAge:
+    Type: 'Number'
+    Description: 'Maximum age for passwords'
+    Default: 90
+    ConstraintDescription: '(90-365 days)'
+    MinValue: 1
+    MaxValue: 90
+  MinPasswordLength:
+    Type: 'Number'
+    Description: 'Minimum password length'
+    Default: 7
+    ConstraintDescription: '(8-128 characters)'
+    MinValue: 7
+    MaxValue: 128
+  PasswordHistory:
+    Type: 'Number'
+    Description: 'Number of previous passwords to remember'
+    Default: 4
+    ConstraintDescription: '(1-24 passwords)'
+    MinValue: 4
+    MaxValue: 24
+  RequireLowercaseChars:
+    Type: 'String'
+    Description: 'Require at least one lowercase character'
+    Default: 'True'
+    AllowedValues:
+      - 'True'
+      - 'False'
+  RequireNumbers:
+    Type: 'String'
+    Description: 'Require at least one number'
+    Default: 'True'
+    AllowedValues:
+      - 'True'
+      - 'False'
+  RequireSymbols:
+    Type: 'String'
+    Description: 'Require at least one symbol'
+    Default: 'True'
+    AllowedValues:
+      - 'True'
+      - 'False'
+  RequireUppercaseChars:
+    Type: 'String'
+    Description: 'Require at least one uppercase character'
+    Default: 'True'
+    AllowedValues:
+      - 'True'
+      - 'False'
+  VPCTenancy:
+    Description: Instance tenancy behavior for this VPC. If unsure, leave as default.
+    Type: String
+    Default: default
+    AllowedValues:
+      - default
+      - dedicated
+  QSS3BucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-.]*[0-9a-zA-Z])*$
+    ConstraintDescription: Quick Start bucket name can include numbers, lowercase
+      letters, uppercase letters, periods (.), and hyphens (-). It cannot start or
+      end with a hyphen (-). If you are unsure, do not change this value.
+    Default: aws-quickstart
+    Description: S3 bucket name for the Quick Start assets. Quick Start bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-). If you are unsure, do not change this value.
+    Type: String
+  QSS3KeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: Quick Start key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/). If you are unsure, do not change this value.
+    Default: quickstart-compliance-pci/
+    Description: S3 key prefix for the Quick Start assets. Quick Start key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/). If you are unsure, do not change this value.
+    Type: String
+  DBUsername:
+    Default: 'admin'
+    Description: Username of DB Instance
+    Type: String
+  DBPassword:
+    Description: Password of DB Instance
+    Type: String
+    NoEcho: True
+Mappings:
+  CustomVariables:
+    vResourceEnvironmentTagKey:
+      Value: Environment
+    vResourceEnvironmentTagValue:
+      Value: development
+  Instances:
+    ap-northeast-1:
+      InstanceType: m4.large
+    ap-northeast-2:
+      InstanceType: m4.large
+    ap-south-1:
+      InstanceType: m4.large
+    ap-southeast-1:
+      InstanceType: m4.large
+    ap-southeast-2:
+      InstanceType: m4.large
+    ca-central-1:
+      InstanceType: m4.large
+    eu-central-1:
+      InstanceType: m4.large
+    eu-west-1:
+      InstanceType: m4.large
+    eu-west-2:
+      InstanceType: m4.large
+    sa-east-1:
+      InstanceType: m4.large
+    us-east-1:
+      InstanceType: m4.large
+    us-east-2:
+      InstanceType: m4.large
+    us-west-1:
+      InstanceType: m4.large
+    us-west-2:
+      InstanceType: m4.large
+      ConfigRules: 'true'
+      Glacier: 'true'
+  AWSAMIRegionMap:
+    ap-northeast-1:
+      AMZNLINUXHVM: ami-0ccdbc8c1cb7957be
+    ap-northeast-2:
+      AMZNLINUXHVM: ami-082b5ca9ff663f3b8
+    ap-south-1:
+      AMZNLINUXHVM: ami-0eacc5b7915ba9921
+    ap-southeast-1:
+      AMZNLINUXHVM: ami-03097abf0db1cdff2
+    ap-southeast-2:
+      AMZNLINUXHVM: ami-05067171f4230ac41
+    ca-central-1:
+      AMZNLINUXHVM: ami-07ab3281411d31d04
+    eu-central-1:
+      AMZNLINUXHVM: ami-03a71cec707bfc3d7
+    eu-west-1:
+      AMZNLINUXHVM: ami-03c242f4af81b2365
+    eu-west-2:
+      AMZNLINUXHVM: ami-05663d374a152d239
+    sa-east-1:
+      AMZNLINUXHVM: ami-0eb2a191bf5e40e10
+    us-east-1:
+      AMZNLINUXHVM: ami-0756fbca465a59a30
+    us-east-2:
+      AMZNLINUXHVM: ami-04768381bf606e2b3
+    us-gov-west-1:
+      AMZNLINUXHVM: ami-ffa61d9e
+    us-gov-east-1:
+      AMZNLINUXHVM: ami-slkdf
+    us-west-1:
+      AMZNLINUXHVM: ami-063dd30adbb186909
+    us-west-2:
+      AMZNLINUXHVM: ami-90238490234
+Conditions:
+  GovCloudCondition:
+    !Equals
+    - !Ref AWS::Region
+    - us-gov-west-1
+  LaunchAsDedicatedInstance:
+    !Equals
+    - !Ref VPCTenancy
+    - dedicated
+Resources:
+  IAMPasswordPolicy:
+    Type: 'Custom::IAMPolicyResource'
+    Properties:
+      ServiceToken: !GetAtt IAMPasswordPolicyResource.Arn
+      Region: !Ref "AWS::Region"
+
+  IAMPasswordPolicyResource:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Runtime: python2.7
+      Handler: index.lambda_handler
+      MemorySize: 128
+      Timeout: 30
+      Role: !GetAtt IAMPasswordPolicyResourceExecutionRole.Arn
+      Code:
+        ZipFile: !Sub |
+          import boto3
+          from botocore.exceptions import ClientError
+          import json
+          import cfnresponse
+
+          iam = boto3.client("iam")
+
+          # Lambda entry point
+          def lambda_handler(event, context):
+
+            if event['RequestType'] == 'Create' or event['RequestType'] == 'Update':
+              res, reason = update_policy()
+            elif event['RequestType'] == 'Delete':
+              res, reason = delete_policy()
+            else:
+              res = False
+              reason = "Unknown operation: " + event['RequestType']
+            responseData = {}
+            responseData['Reason'] = reason
+            if res:
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, responseData)
+            else:
+              cfnresponse.send(event, context, cfnresponse.FAILED, responseData)
+
+          def update_policy():
+            try:
+
+              response = iam.update_account_password_policy(
+                  AllowUsersToChangePassword=True,
+                  HardExpiry=False,
+                  MaxPasswordAge=${MaxPasswordAge},
+                  MinimumPasswordLength=${MinPasswordLength},
+                  RequireLowercaseCharacters=${RequireLowercaseChars},
+                  RequireNumbers=${RequireNumbers},
+                  RequireSymbols=${RequireSymbols},
+                  RequireUppercaseCharacters=${RequireUppercaseChars},
+                  PasswordReusePrevention=${PasswordHistory})
+
+              return(True, response)
+            except Exception as e:
+              return (False, "Cannot update policy: " + str(e))
+
+          def delete_policy():
+            try:
+
+              policy = iam.get_account_password_policy()
+              response = iam.delete_account_password_policy()
+              return (True, response)
+            except Exception as e:
+              return (False, "Cannot delete policy: " + str(e))
+
+  IAMPasswordPolicyResourceExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: IAMPasswordCreatorPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: 'Allow'
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - iam:GetAccountPasswordPolicy
+                  - iam:UpdateAccountPasswordPolicy
+                  - iam:DeleteAccountPasswordPolicy
+                Resource: "*"
+  IamTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-compliance-common/templates/iam.template
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+      TimeoutInMinutes: 20
+  ProductionVpcTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-compliance-common/templates/vpc-production.template
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+      TimeoutInMinutes: 20
+      Parameters:
+        pRegionAZ1Name: !Ref AvailabilityZoneA
+        pRegionAZ2Name: !Ref AvailabilityZoneB
+        pProductionVPCName: Production VPC
+        pBastionSSHCIDR: 0.0.0.0/0
+        pDMZSubnetACIDR: 10.100.10.0/24
+        pDMZSubnetBCIDR: 10.100.20.0/24
+        pManagementCIDR: 10.10.0.0/16
+        pAppPrivateSubnetACIDR: 10.100.96.0/21
+        pAppPrivateSubnetBCIDR: 10.100.119.0/21
+        pDBPrivateSubnetACIDR: 10.100.194.0/21
+        pDBPrivateSubnetBCIDR: 10.100.212.0/21
+        pVPCTenancy: !Ref VPCTenancy
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}submodules/quickstart-compliance-common/
+  ManagementVpcTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-compliance-common/templates/vpc-management.template
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+      TimeoutInMinutes: 20
+      Parameters:
+        pProductionVPC:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rVPCProduction
+        pRouteTableProdPrivate:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rRouteTableProdPrivate
+        pRouteTableProdPublic:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rRouteTableProdPublic
+        pProductionCIDR: 10.100.0.0/16
+        pBastionSSHCIDR: 0.0.0.0/0
+        pManagementCIDR: 10.10.0.0/16
+        pManagementDMZSubnetACIDR: 10.10.1.0/24
+        pManagementDMZSubnetBCIDR: 10.10.2.0/24
+        pManagementPrivateSubnetACIDR: 10.10.20.0/24
+        pManagementPrivateSubnetBCIDR: 10.10.30.0/24
+        pManagementVPCName: Management VPC
+        pEC2KeyPairBastion: !Ref EC2KeyPairBastion
+        pEC2KeyPair: !Ref EC2KeyPair
+        pVPCTenancy: !Ref VPCTenancy
+        pBastionAmi:
+          !FindInMap
+          - AWSAMIRegionMap
+          - !Ref AWS::Region
+          - AMZNLINUXHVM
+        pRegionAZ1Name: !Ref AvailabilityZoneA
+        pRegionAZ2Name: !Ref AvailabilityZoneB
+        pBastionInstanceType:
+          !If
+          - LaunchAsDedicatedInstance
+          - m4.large
+          - t2.small
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Sub ${QSS3KeyPrefix}submodules/quickstart-compliance-common/
+  ConfigRulesTemplate:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - IamTemplate
+      - ProductionVpcTemplate
+      - ManagementVpcTemplate
+    Properties:
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-compliance-common/templates/config-rules.template
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+      TimeoutInMinutes: 20
+      Parameters:
+        pRequiredTagKey:
+          !FindInMap
+          - CustomVariables
+          - vResourceEnvironmentTagKey
+          - Value
+  DatabaseTemplate:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: ProductionVpcTemplate
+    Properties:
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/database.template.yaml
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+      Parameters:
+        ProductionVPC:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rVPCProduction
+        DBPrivateSubnetA:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rAppPrivateSubnetA
+        DBPrivateSubnetB:
+          !GetAtt
+          - ProductionVpcTemplate
+          - Outputs.rAppPrivateSubnetB
+        RegionAZ1Name: !Ref AvailabilityZoneA
+        RegionAZ2Name: !Ref AvailabilityZoneB
+        DBName: examplewordpress
+        DBUser: !Ref DBUsername
+        DBPassword: !Ref DBPassword
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+  ApplicationTemplate:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        !Sub
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/application.template.yaml
+        - QSS3Region:
+            !If
+            - GovCloudCondition
+            - s3-us-gov-west-1
+            - s3
+      TimeoutInMinutes: 30
+      Parameters:
+        EC2KeyPair: !Ref EC2KeyPair
+        ProductionCIDR: 10.100.0.0/16
+        ProductionVPC: !GetAtt ProductionVpcTemplate.Outputs.rVPCProduction
+        DMZSubnetA: !GetAtt ProductionVpcTemplate.Outputs.rDMZSubnetA
+        DMZSubnetB: !GetAtt ProductionVpcTemplate.Outputs.rDMZSubnetB
+        AppPrivateSubnetA: !GetAtt ProductionVpcTemplate.Outputs.rAppPrivateSubnetA
+        AppPrivateSubnetB: !GetAtt ProductionVpcTemplate.Outputs.rAppPrivateSubnetB
+        ManagementCIDR: 10.10.0.0/16
+        AvailabilityZoneA: !Ref AvailabilityZoneA
+        AvailabilityZoneB: !Ref AvailabilityZoneB
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        DBHost: !GetAtt DatabaseTemplate.Outputs.AuroraClusterEndpoint
+        DBName: examplewordpress
+        DBUser: !Ref DBUsername
+        DBPassword: !Ref DBPassword
+Outputs:
+  TemplateType:
+    Value: Standard Architecture
+  TemplateVersion:
+    Value: 2.5
+  BastionIP:
+    Description: Use this IP via SSH to connect to Bastion Instance
+    Value:
+      !GetAtt
+      - ManagementVpcTemplate
+      - Outputs.rBastionInstanceIP

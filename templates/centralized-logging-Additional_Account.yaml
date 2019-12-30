@@ -1,0 +1,251 @@
+# Centralized Logging Solution
+#
+# template for centralized-logging-solution
+# **DO NOT DELETE**
+#
+# author: aws-solutions-builder@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: (SO0009s) - AWS Centralized Logging Solution, spoke accounts template
+
+Parameters:
+  # Name for ES Domain
+  ESDomain:
+    Description: Elasticsearch Domain Endpoint for centralized logging. (remove https://)
+    Type: String
+  # AWS account number of the central logging account (primary log stack)
+  CentralLogAcct:
+    Description: AWS Account Id for the central logging account. (12 digits)
+    Type: String
+
+  # ES cluster size
+  ClusterSize:
+    Description: Amazon ES cluster size, as deployed in primary account
+    Type: String
+    Default: Small
+    AllowedValues:
+    - Small
+    - Medium
+    - Large
+    - xLarge
+
+  # Master IAM role for cross account log indexing
+  MasterRole:
+    Description: IAM Role Arn for cross account log indexing
+    Type: String
+
+  # S3 bucket for central log storage
+  S3BucketName:
+    Description: S3 bucket for central log storage
+    Type: String
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+    - Label:
+        default: Elasticsearch Configuration
+      Parameters:
+      - ESDomain
+      - CentralLogAcct
+      - MasterRole
+      - ClusterSize
+    - Label:
+        default: Central S3 Logging Bucket
+      Parameters:
+      - S3BucketName
+
+    ParameterLabels:
+      ESDomain:
+        default: Elasticsearch Endpoint
+      ClusterSize:
+        default: Cluster Size
+      MasterRole:
+        default: Master Account Role
+      S3BucketName:
+        default: Central S3 Log Bucket
+      CentralLogAcct:
+        default: Central Log Account ID
+
+Mappings:
+  InstanceMap:
+    send-data: {"SendAnonymousData": "Yes"}
+
+  # Lambda source code mapping
+#  SourceCode:
+#    General:
+#      S3Bucket: "solutions"
+#      KeyPrefix: "centralized-logging/v3.0.0"
+
+Resources:
+  #
+  # Log Streamer and Demo resources
+  # [LogStreamerRole, LogStreamer, LogStreamerInvokePermission, DemoStack]
+  #
+  LogStreamerRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: !Sub logstreamer-${AWS::Region}
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+            - Effect: Allow
+              Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*
+            - Effect: Allow
+              Action:
+              - es:ESHttpPost
+              Resource: !Sub arn:aws:es:${AWS::Region}:${CentralLogAcct}:domain/*
+            - Effect: Allow
+              Action:
+              - sts:AssumeRole
+              Resource: !Sub ${MasterRole}
+
+  LogStreamer:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Centralized Logging - Lambda function to stream logs cross account on ES Domain
+      Environment:
+        Variables:
+          endpoint: !Sub ${ESDomain}
+      Handler: index.handler
+      Role: !Sub ${LogStreamerRole.Arn}
+      Code:
+        S3Bucket: cfindexscripts2
+        S3Key: "index.zip"
+      Runtime: nodejs8.10
+      Timeout: 300
+
+  LogStreamerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub ${LogStreamer}
+      Action: lambda:InvokeFunction
+      Principal: !Sub logs.${AWS::Region}.amazonaws.com
+      SourceAccount: !Sub ${AWS::AccountId}
+
+  #
+  # Solution Helper resources
+  # [SolutionHelperRole, SolutionHelper, SendingAnonymousData, CreateUniqueID]
+  #
+  SolutionHelperRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: Custom_Lambda_Loader_Permissions
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*
+
+  SolutionHelper:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: solution-helper.lambda_handler
+      Role: !Sub ${SolutionHelperRole.Arn}
+      Description: EFS Backup - This function is a CloudFormation custom lambda resource that generates UUID for each deployment.
+      Code:
+       S3Bucket: !Sub solutions-${AWS::Region}
+       S3Key: library/solution-helper/v3/solution-helper.zip
+      Runtime: python2.7
+      Timeout: 300
+
+  CreateUniqueID:
+    Type: Custom::LoadLambda
+    Properties:
+      ServiceToken: !Sub ${SolutionHelper.Arn}
+      Region: !Sub ${AWS::Region}
+      CreateUniqueID: true
+
+  rCloudTrailTrail:
+    Type: "AWS::CloudTrail::Trail"
+    DependsOn:
+      #- vS3BucketName
+      - rCloudWatchLogGroup
+    Properties:
+      CloudWatchLogsLogGroupArn: !GetAtt rCloudWatchLogGroup.Arn
+      CloudWatchLogsRoleArn: !GetAtt rCloudWatchLogsRole.Arn
+      EnableLogFileValidation: True
+      IncludeGlobalServiceEvents: True
+      IsLogging: True
+      IsMultiRegionTrail: True
+      S3BucketName: !Ref S3BucketName
+      Tags:
+        -
+          Key: Name
+          Value: !Sub ${AWS::StackName}
+      TrailName: !Sub ${AWS::StackName}
+
+  rCloudWatchLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: CentralCloudWatchLogGroupPCI
+      RetentionInDays: 365
+  rCloudWatchLogsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          -
+            Effect: "Allow"
+            Principal:
+              Service:
+                - "cloudtrail.amazonaws.com"
+            Action:
+              - "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        -
+          PolicyName: "CloudTrail_CloudWatchLogs_Role"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              -
+                Effect: "Allow"
+                Action: "logs:CreateLogStream"
+                Resource: !Join [ '', [ !GetAtt rCloudWatchLogGroup.Arn, '*' ] ]
+              -
+                Effect: "Allow"
+                Action: "logs:PutLogEvents"
+                Resource: !Join [ '', [ !GetAtt rCloudWatchLogGroup.Arn, '*' ] ]
+  SubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    DependsOn:
+      - rCloudWatchLogGroup
+      - LogStreamer
+    Properties:
+      #RoleArn: !GetAtt LoggingMasterRole.Arn
+      LogGroupName: CentralCloudWatchLogGroupPCI
+      #LogFormat: "Cloud Trail"
+      FilterPattern: ''
+      DestinationArn: !Sub ${LogStreamer.Arn}
+
+Outputs:
+  LambdaArn:
+    Description: Lambda function to index logs on ES Domain
+    Value: !Sub ${LogStreamer.Arn}
