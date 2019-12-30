@@ -214,37 +214,37 @@ Mappings:
       Glacier: 'true'
   AWSAMIRegionMap:
     ap-northeast-1:
-      AMZNLINUXHVM: ami-0ccdbc8c1cb7957be
+      AMZNLINUXHVM: ami-0ab3e16f9c414dee7
     ap-northeast-2:
-      AMZNLINUXHVM: ami-082b5ca9ff663f3b8
+      AMZNLINUXHVM: ami-0e1e385b0a934254a
     ap-south-1:
-      AMZNLINUXHVM: ami-0eacc5b7915ba9921
+      AMZNLINUXHVM: ami-02913db388613c3e1
     ap-southeast-1:
-      AMZNLINUXHVM: ami-03097abf0db1cdff2
+      AMZNLINUXHVM: ami-05c859630889c79c8
     ap-southeast-2:
-      AMZNLINUXHVM: ami-05067171f4230ac41
+      AMZNLINUXHVM: ami-07cc15c3ba6f8e287
     ca-central-1:
-      AMZNLINUXHVM: ami-07ab3281411d31d04
+      AMZNLINUXHVM: ami-04070f04f450607dc
     eu-central-1:
-      AMZNLINUXHVM: ami-03a71cec707bfc3d7
+      AMZNLINUXHVM: ami-010fae13a16763bb4
     eu-west-1:
-      AMZNLINUXHVM: ami-03c242f4af81b2365
+      AMZNLINUXHVM: ami-028188d9b49b32a80
     eu-west-2:
-      AMZNLINUXHVM: ami-05663d374a152d239
+      AMZNLINUXHVM: ami-04de2b60dd25fbb2e
     sa-east-1:
-      AMZNLINUXHVM: ami-0eb2a191bf5e40e10
+      AMZNLINUXHVM: ami-0e2c2c29d8017dd99
     us-east-1:
-      AMZNLINUXHVM: ami-0756fbca465a59a30
+      AMZNLINUXHVM: ami-00eb20669e0990cb4
     us-east-2:
-      AMZNLINUXHVM: ami-04768381bf606e2b3
+      AMZNLINUXHVM: ami-0c64dd618a49aeee8
     us-gov-west-1:
       AMZNLINUXHVM: ami-ffa61d9e
     us-gov-east-1:
       AMZNLINUXHVM: ami-slkdf
     us-west-1:
-      AMZNLINUXHVM: ami-063dd30adbb186909
+      AMZNLINUXHVM: ami-0bce08e823ed38bdd
     us-west-2:
-      AMZNLINUXHVM: ami-90238490234
+      AMZNLINUXHVM: ami-08d489468314a58df
 Conditions:
   GovCloudCondition:
     !Equals

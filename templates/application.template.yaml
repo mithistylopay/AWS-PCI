@@ -227,37 +227,37 @@ Mappings:
       InstanceTypeDatabase: db.m4.large
   AWSAMIRegionMap:
     ap-northeast-1:
-      AMZNLINUXHVM: ami-0c3fd0f5d33134a76
+      AMZNLINUXHVM: ami-0ab3e16f9c414dee7
     ap-northeast-2:
-      AMZNLINUXHVM: ami-095ca789e0549777d
+      AMZNLINUXHVM: ami-0e1e385b0a934254a
     ap-south-1:
-      AMZNLINUXHVM: ami-0d2692b6acea72ee6
+      AMZNLINUXHVM: ami-02913db388613c3e1
     ap-southeast-1:
-      AMZNLINUXHVM: ami-0dc96254d5535925f
+      AMZNLINUXHVM: ami-05c859630889c79c8
     ap-southeast-2:
-      AMZNLINUXHVM: ami-05067171f4230ac41
+      AMZNLINUXHVM: ami-07cc15c3ba6f8e287
     ca-central-1:
-      AMZNLINUXHVM: ami-0d4ae09ec9361d8ac
+      AMZNLINUXHVM: ami-04070f04f450607dc
     eu-central-1:
-      AMZNLINUXHVM: ami-0cc293023f983ed53
+      AMZNLINUXHVM: ami-010fae13a16763bb4
     eu-west-1:
-      AMZNLINUXHVM: ami-0bbc25e23a7640b9b
+      AMZNLINUXHVM: ami-028188d9b49b32a80
     eu-west-2:
-      AMZNLINUXHVM: ami-0d8e27447ec2c8410
+      AMZNLINUXHVM: ami-04de2b60dd25fbb2e
     sa-east-1:
-      AMZNLINUXHVM: ami-058943e7d9b9cabfb
+      AMZNLINUXHVM: ami-0e2c2c29d8017dd99
     us-east-1:
-      AMZNLINUXHVM: ami-0b898040803850657
+      AMZNLINUXHVM: ami-00eb20669e0990cb4
     us-east-2:
-      AMZNLINUXHVM: ami-0d8f6eb4f641ef691
+      AMZNLINUXHVM: ami-0c64dd618a49aeee8
     us-gov-west-1:
       AMZNLINUXHVM: ami-e9a9d388
     us-gov-east-1:
       AMZNLINUXHVM: ami-2093423904
     us-west-1:
-      AMZNLINUXHVM: ami-056ee704806822732
+      AMZNLINUXHVM: ami-0bce08e823ed38bdd
     us-west-2:
-      AMZNLINUXHVM: ami-082b5a644766e0e6f
+      AMZNLINUXHVM: ami-08d489468314a58df
 Conditions:
   GovCloudCondition: !Or [!Equals [!Ref "AWS::Region", us-gov-west-1], !Equals [!Ref "AWS::Region", us-gov-east-1]]
 Resources:
