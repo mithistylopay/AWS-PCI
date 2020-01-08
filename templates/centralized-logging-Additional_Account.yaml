@@ -11,16 +11,16 @@ Description: (SO0009s) - AWS Centralized Logging Solution, spoke accounts templa
 Parameters:
   # Name for ES Domain
   ESDomain:
-    Description: Elasticsearch Domain Endpoint for centralized logging. (remove https://)
+    Description: Amazon ES domain endpoint for centralized logging (remove https://).
     Type: String
   # AWS account number of the central logging account (primary log stack)
   CentralLogAcct:
-    Description: AWS Account Id for the central logging account. (12 digits)
+    Description: AWS account ID for the central logging account (12 digits).
     Type: String
 
   # ES cluster size
   ClusterSize:
-    Description: Amazon ES cluster size, as deployed in primary account
+    Description: Amazon ES cluster size, as deployed in primary account.
     Type: String
     Default: Small
     AllowedValues:
@@ -31,40 +31,40 @@ Parameters:
 
   # Master IAM role for cross account log indexing
   MasterRole:
-    Description: IAM Role Arn for cross account log indexing
+    Description: IAM Role Amazon Resource Name (ARN) for cross-account log indexing.
     Type: String
 
   # S3 bucket for central log storage
   S3BucketName:
-    Description: S3 bucket for central log storage
+    Description: S3 bucket for central log storage, created in the primary log account.
     Type: String
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
     - Label:
-        default: Elasticsearch Configuration
+        default: Amazon Elasticsearch configuration
       Parameters:
       - ESDomain
       - CentralLogAcct
       - MasterRole
       - ClusterSize
     - Label:
-        default: Central S3 Logging Bucket
+        default: Central logging S3 bucket
       Parameters:
       - S3BucketName
 
     ParameterLabels:
       ESDomain:
-        default: Elasticsearch Endpoint
+        default: Amazon ES endpoint
       ClusterSize:
-        default: Cluster Size
+        default: Cluster size
       MasterRole:
-        default: Master Account Role
+        default: Master account role
       S3BucketName:
-        default: Central S3 Log Bucket
+        default: Central S3 log bucket name
       CentralLogAcct:
-        default: Central Log Account ID
+        default: Central log account ID
 
 Mappings:
   InstanceMap:
