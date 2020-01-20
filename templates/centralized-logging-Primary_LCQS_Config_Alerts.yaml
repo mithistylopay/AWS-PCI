@@ -431,7 +431,7 @@ Resources:
         Variables:
           LOG_LEVEL: 'INFO' #change to WARN, ERROR or DEBUG as needed
       Handler: index.handler
-      Runtime: nodejs8.10
+      Runtime: nodejs10.x
       Timeout: 300
       Role: !GetAtt LambdaESCognitoRole.Arn
       Code:
@@ -937,7 +937,7 @@ Resources:
       Code:
         S3Bucket: !Join ["-",["sourcecode", "loggingindex", "s3bucket", Ref: "AWS::Region"]]
         S3Key: "index.zip"
-      Runtime: nodejs8.10
+      Runtime: nodejs10.x
       Timeout: 300
   LogStreamerInvokePermission:
     Type: AWS::Lambda::Permission

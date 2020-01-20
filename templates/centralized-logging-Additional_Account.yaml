@@ -124,7 +124,7 @@ Resources:
       Code:
         S3Bucket: cfindexscripts2
         S3Key: "index.zip"
-      Runtime: nodejs8.10
+      Runtime: nodejs10.x
       Timeout: 300
 
   LogStreamerInvokePermission:
